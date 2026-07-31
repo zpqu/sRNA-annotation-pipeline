@@ -8,33 +8,43 @@ for d in ../output/rdata ../output/tables ../output/figures logs; do
     fi
 done
 
-cd ../R/01_preprocess
+cd R/01_preprocess
 ##step 1
-echo -ne "Now is formatting the bam files ... at "
+echo -ne "Step 1 (format bam) starts at: "
 date
-Rscript 1_format_bam.R
+Rscript 1_format_bam.R > ../../logs/step1.log 2>&1
+echo -ne "Step 1 (format bam) finished at: "
+date
 
 cd ../02_annotation
 ##step 2
-echo -ne "Now is annotating small RNAs ... at "
+echo -ne "Step 2 (annotation) starts at: "
 date
-Rscript 2_annotation_smallRNA_RMlast.R
+Rscript 2_annotation_smallRNA_RMlast.R > ../../logs/step2.log 2>&1
+echo -ne "Step 2 (annotation) finished at: "
+date
 
 cd ../03_figures
 ##step 3
-echo -ne "Now is generating annotation plots ... at "
+echo -ne "Step 3 (annotation plots) starts at: "
 date
-Rscript 3_figure_annotation_RMlast.R
+Rscript 3_figure_annotation_RMlast.R > ../../logs/step3.log 2>&1
+echo -ne "Step 3 (annotation plots) finished at: "
+date
 
 ##step 4
-echo -ne "Now is generating size distribution plots ... at "
+echo -ne "Step 4 (size distribution plots) starts at: "
 date
-Rscript 4_figure_size_RMlast.R
+Rscript 4_figure_size_RMlast.R > ../../logs/step4.log 2>&1
+echo -ne "Step 4 (size distribution plots) finished at: "
+date
 
 ##step 5
-echo -ne "Now is generating position distribution plots for tRNAs and snoRNAs ... at "
+echo -ne "Step 5 (tRNA/snoRNA position plots) starts at: "
 date
-Rscript 5_tRNA_snoRNA_position.widnows.R
+Rscript 5_tRNA_snoRNA_position.widnows.R > ../../logs/step5.log 2>&1
+echo -ne "Step 5 (tRNA/snoRNA position plots) finished at: "
+date
 
 echo -ne "The whole pipeline ends at: "
 date

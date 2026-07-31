@@ -22,7 +22,7 @@ mygeneFeature = function(bam){
                     if(length(unique(queryHits(single.bam.ol))) == 0){
                      single.bam.gr = single.bam.gr
                     }else{
-                     single.bam.gr = single.bam.gr[!(names(single.bam.gr) %in% names(single.bam.gr[unique(queryHits(single.bam.ol))]))]
+                     single.bam.gr = single.bam.gr[!single.bam.gr$rm.key %in% single.bam.gr$rm.key[unique(queryHits(single.bam.ol))]]
                     }
               }
              for(g in 1:length(geneFeature.list)){
@@ -41,7 +41,7 @@ mygeneFeature = function(bam){
                     if(length(unique(queryHits(single.bam.ol))) == 0){
                      single.bam.gr = single.bam.gr
                     }else{
-                     single.bam.gr = single.bam.gr[!(names(single.bam.gr) %in% names(single.bam.gr[unique(queryHits(single.bam.ol))]))]
+                     single.bam.gr = single.bam.gr[!single.bam.gr$rm.key %in% single.bam.gr$rm.key[unique(queryHits(single.bam.ol))]]
                     }
               }
 

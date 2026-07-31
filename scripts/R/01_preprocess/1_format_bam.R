@@ -101,9 +101,9 @@ for(i in seq(along = files)){
     dominant_size_by_reads_n = wb$n_reads[1],
     top5_sizes_nt = paste(names(tb)[1:5], collapse = ";")
   )
-  size.list[[i]] = copy(size.dt)[, sample := sam]
-  count.list[[i]] = copy(cdist.dt)[, sample := sam]
-  bin.list[[i]] = copy(bin.dt)[, sample := sam]
+  size.list[[i]] = copy(size.dt)[, sample := sample.label]
+  count.list[[i]] = copy(cdist.dt)[, sample := sample.label]
+  bin.list[[i]] = copy(bin.dt)[, sample := sample.label]
 
   ## ----- size vs count distribution/density figures -------------------------------
   x.breaks = seq(floor(min(size.dt$width) / 5) * 5, max(size.dt$width), by = 5)

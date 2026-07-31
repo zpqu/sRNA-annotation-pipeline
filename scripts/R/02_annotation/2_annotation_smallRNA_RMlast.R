@@ -89,6 +89,11 @@ for(i in seq(along = files)){
       test.bam.gr = reads.bam.unique.gr
       test.bam.gr$type = NULL
       test.bam.gr$region = NULL
+      ## position key for removing already-annotated reads. Names are NOT unique:
+      ## multi-mapping reads share one name across loci (step 1 collapses by
+      ## chr/start/end/strand), so removal must use this key, not read names.
+      test.bam.gr$rm.key = paste(seqnames(test.bam.gr), start(test.bam.gr),
+                                 end(test.bam.gr), strand(test.bam.gr), sep = ":")
       test.bam.new.gr = test.bam.gr
       test.bam.new.gr = test.bam.new.gr[-(1:length(test.bam.new.gr))]
       test.other.gr = NULL
@@ -156,7 +161,7 @@ for(i in seq(along = files)){
 	    if(length(unique(queryHits(test.bam.ol))) == 0){
 	     test.bam.gr = test.bam.gr
 	    }else{
-	     test.bam.gr = test.bam.gr[!(names(test.bam.gr) %in% names(test.bam.gr[unique(queryHits(test.bam.ol))]))]
+	     test.bam.gr = test.bam.gr[!test.bam.gr$rm.key %in% test.bam.gr$rm.key[unique(queryHits(test.bam.ol))]]
 	    }
       }
 
@@ -177,7 +182,7 @@ for(i in seq(along = files)){
             if(length(unique(queryHits(test.bam.ol))) == 0){
 	        test.bam.gr = test.bam.gr  
             }else{
-	    	test.bam.gr = test.bam.gr[!(names(test.bam.gr) %in% names(test.bam.gr[unique(queryHits(test.bam.ol))]))]
+	    	test.bam.gr = test.bam.gr[!test.bam.gr$rm.key %in% test.bam.gr$rm.key[unique(queryHits(test.bam.ol))]]
             }
   
       }
@@ -192,6 +197,7 @@ for(i in seq(along = files)){
       add.counts("read.annotation", test.bam.new.gr$type, test.bam.new.gr$count)
       add.counts("read.size", width(test.bam.new.gr), test.bam.new.gr$count)
       reads.bam.annotated.gr = test.bam.new.gr
+      reads.bam.annotated.gr$rm.key = NULL
       save(reads.bam.annotated.gr, file = paste("../../../output/rdata/", sample, ".bam.annotated.gr.RData", sep = ""))
       write.table(read.annotation.count.df, file = paste("../../../output/tables/", sample, ".read.annotation.count.txt", sep = ""), quote = F, sep = "\t", col.names = T, row.names = F)
       write.table(read.size.count.df, file = paste("../../../output/tables/", sample, ".read.size.count.txt", sep = ""), quote = F, sep = "\t", col.names = T, row.names = F)
