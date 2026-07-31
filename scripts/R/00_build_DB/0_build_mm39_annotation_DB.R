@@ -5,8 +5,8 @@
 ## DB/rdata_mm10/ (same object names, prefix mm10. replaced by mm39., one .RData
 ## per object), and the outputs are written to DB/rdata/.
 ##
-## Run from scripts/rScripts/ (same convention as the other pipeline scripts),
-## or invoke directly:  Rscript scripts/rScripts/0_build_mm39_annotation_DB.R
+## Run from scripts/R/00_build_DB/ (same convention as the other pipeline scripts),
+## or invoke directly:  Rscript scripts/R/00_build_DB/0_build_mm39_annotation_DB.R
 
 suppressMessages({
   library(rtracklayer)
@@ -15,7 +15,7 @@ suppressMessages({
   library(data.table)
 })
 
-root <- if (file.exists("DB")) "." else "../.."   # run from scripts/rScripts (preferred) or project root
+root <- if (file.exists("DB")) "." else "../../.."   # run from scripts/R/00_build_DB/ (preferred) or project root
 in.dir  <- file.path(root, "DB", "original_data")
 out.dir <- file.path(root, "DB", "rdata")
 stopifnot(dir.exists(in.dir))

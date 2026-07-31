@@ -26,22 +26,23 @@ library(scales)
 library(patchwork)
 rm(list = ls())
 
-if(!dir.exists("../../rdata")) dir.create("../../rdata", recursive = TRUE)
-if(!dir.exists("../../plots")) dir.create("../../plots", recursive = TRUE)
-if(!dir.exists("../../output")) dir.create("../../output", recursive = TRUE)
+if(!dir.exists("../../../output/rdata")) dir.create("../../../output/rdata", recursive = TRUE)
+if(!dir.exists("../../../output/figures")) dir.create("../../../output/figures", recursive = TRUE)
+if(!dir.exists("../../../output/tables")) dir.create("../../../output/tables", recursive = TRUE)
 
-files = list.files(path = "../../bams/", pattern = ".bam$")
+files = list.files(path = "../../../bams/", pattern = ".bam$")
 summ.list = list()
 size.list = list()
 count.list = list()
 bin.list = list()
 
 for(i in seq(along = files)){
-  file.name = paste("../../bams/", files[i], sep = "");
+  file.name = paste("../../../bams/", files[i], sep = "");
   sam = files[i];
   print(paste("Now is processing ...", sam, "at", Sys.time()))
   sam = gsub("\\.bam", "", sam)
   sam = gsub("\\_R1\\.trimmed\\_NEB\\.bwa\\.hg19", "", sam)
+  sample.label = gsub("\\.(bwa|bowtie2)$", "", sam)
   reads.bam = readGAlignments(file.name, use.names = T)
   reads.strand = gsub("chr", "", seqnames(reads.bam))
   reads.strand = gsub("Chr", "", reads.strand)
@@ -71,9 +72,9 @@ for(i in seq(along = files)){
               "at", Sys.time()))
 
   ## ----- save -----------------------------------------------------------------
-  gr.name = paste("../../rdata/", sam, ".bam.gr.RData", sep = "")
+  gr.name = paste("../../../output/rdata/", sam, ".bam.gr.RData", sep = "")
   save(reads.bam.gr, file = gr.name)
-  gr.unique.name = paste("../../rdata/", sam, ".bam.unique.gr.RData", sep = "")
+  gr.unique.name = paste("../../../output/rdata/", sam, ".bam.unique.gr.RData", sep = "")
   save(reads.bam.unique.gr, file = gr.unique.name)
 
   ## ----- plot/table data -------------------------------------------------------
@@ -87,7 +88,7 @@ for(i in seq(along = files)){
   tb = sort(table(plot.dt$width), decreasing = TRUE)
   wb = plot.dt[, .(n_reads = sum(count)), by = width][order(-n_reads)]
   summ.list[[i]] = data.table(
-    sample = sam,
+    sample = sample.label,
     total_reads = length(reads.bam.gr),
     unique_reads = length(reads.bam.unique.gr),
     singleton_reads = sum(plot.dt$count == 1),
@@ -133,11 +134,11 @@ for(i in seq(along = files)){
     theme_bw() + rot.theme
 
   fig.base = paste0("Figure1", letters[i])
-  plot.name = paste("../../plots/", fig.base, ".read_size_vs_count.pdf", sep = "")
+  plot.name = paste("../../../output/figures/", fig.base, ".read_size_vs_count.pdf", sep = "")
   pdf(plot.name, width = 15, height = 4.2)
   print(p.size + p.count + p.2d + plot_layout(ncol = 3, widths = c(1.4, 1, 1)))
   dev.off()
-  plot.name = paste("../../plots/", fig.base, ".read_size_vs_count.png", sep = "")
+  plot.name = paste("../../../output/figures/", fig.base, ".read_size_vs_count.png", sep = "")
   png(plot.name, width = 4500, height = 1260, res = 300)
   print(p.size + p.count + p.2d + plot_layout(ncol = 3, widths = c(1.4, 1, 1)))
   dev.off()
@@ -152,9 +153,9 @@ size.tab = rbindlist(size.list)
 count.tab = rbindlist(count.list)
 bin.tab = rbindlist(bin.list)
 
-write.csv(summ.tab, "../../output/Table1a_sample_summary.csv", row.names = FALSE)
-write.csv(size.tab, "../../output/Table1b_read_size_distribution.csv", row.names = FALSE)
-write.csv(count.tab, "../../output/Table1c_read_count_distribution.csv", row.names = FALSE)
-write.csv(bin.tab, "../../output/Table1d_read_size_vs_count.csv", row.names = FALSE)
+write.csv(summ.tab, "../../../output/tables/Table1a_sample_summary.csv", row.names = FALSE)
+write.csv(size.tab, "../../../output/tables/Table1b_read_size_distribution.csv", row.names = FALSE)
+write.csv(count.tab, "../../../output/tables/Table1c_read_count_distribution.csv", row.names = FALSE)
+write.csv(bin.tab, "../../../output/tables/Table1d_read_size_vs_count.csv", row.names = FALSE)
 
-print("Tables saved to ../../output/: Table1a_sample_summary.csv, Table1b_read_size_distribution.csv, Table1c_read_count_distribution.csv, Table1d_read_size_vs_count.csv")
+print("Tables saved to ../../../output/tables/: Table1a_sample_summary.csv, Table1b_read_size_distribution.csv, Table1c_read_count_distribution.csv, Table1d_read_size_vs_count.csv")
