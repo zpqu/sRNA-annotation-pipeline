@@ -1,0 +1,6 @@
+## generated data (built reference DB, formatted BAMs, pipeline outputs)
+DB/
+bams/
+output/
+output_matmiRNA/
+scripts/logs/
