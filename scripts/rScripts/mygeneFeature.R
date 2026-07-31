@@ -8,14 +8,14 @@ mygeneFeature = function(bam){
               ##sense
               for(m in 1:length(geneFeature.list)){
                     geneFeature.name = geneFeature.list[m]
-		    geneFeature.id = gsub("mm10\\.", "", geneFeature.name)
+		    geneFeature.id = gsub("mm39\\.", "", geneFeature.name)
                     geneFeature.id = gsub("refGene\\.NM\\.", "", geneFeature.id)
                     geneFeature.id = gsub("\\.grl", "", geneFeature.id)
 		    geneFeature.id = gsub("\\.gr", "", geneFeature.id)
 
                     single.bam.ol = NULL
                     single.bam.hit.gr = NULL
-                    single.bam.ol = findOverlaps(single.bam.gr, get(geneFeature.name))
+                    single.bam.ol = findOverlaps(single.bam.gr, get(geneFeature.name), type = "within")
                     single.bam.hit.gr = single.bam.gr[unique(queryHits(single.bam.ol))]
                     single.bam.hit.gr$region = rep(geneFeature.id, length(single.bam.hit.gr))
                     single.bam.new.gr = c(single.bam.new.gr, single.bam.hit.gr)
@@ -27,14 +27,14 @@ mygeneFeature = function(bam){
               }
              for(g in 1:length(geneFeature.list)){
                     geneFeature.name = geneFeature.list[g]
-		    geneFeature.id = gsub("mm10\\.", "", geneFeature.name)
+		    geneFeature.id = gsub("mm39\\.", "", geneFeature.name)
                     geneFeature.id = gsub("refGene\\.NM\\.", "", geneFeature.id)
                     geneFeature.id = gsub("\\.grl", "", geneFeature.id)
 		    geneFeature.id = gsub("\\.gr", "", geneFeature.id)
 
                     single.bam.ol = NULL
                     single.bam.hit.gr = NULL
-                    single.bam.ol = findOverlaps(single.bam.gr, get(geneFeature.name), ignore.strand = T)
+                    single.bam.ol = findOverlaps(single.bam.gr, get(geneFeature.name), type = "any", ignore.strand = T)
                     single.bam.hit.gr = single.bam.gr[unique(queryHits(single.bam.ol))]
                     single.bam.hit.gr$region = rep(paste("AS.", geneFeature.id, sep = ""), length(single.bam.hit.gr))
                     single.bam.new.gr = c(single.bam.new.gr, single.bam.hit.gr)
