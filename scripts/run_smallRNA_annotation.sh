@@ -2,7 +2,8 @@ echo -ne "The whole pipeline starts at: "
 date
 
 ## clean previous results (output subfolders and logs)
-for d in ../output/rdata ../output/tables ../output/figures logs; do
+for d in ../output/rdata ../output/tables ../output/figures \
+         ../output_matmiRNA/rdata ../output_matmiRNA/tables ../output_matmiRNA/figures logs; do
     if [ "$(ls -A $d)" ]; then
         rm -r ${d}/*
     fi
@@ -22,6 +23,13 @@ echo -ne "Step 2 (annotation) starts at: "
 date
 Rscript 2_annotation_smallRNA_RMlast.R > ../../logs/step2.log 2>&1
 echo -ne "Step 2 (annotation) finished at: "
+date
+
+##step 2b (mature-miRNA strategy)
+echo -ne "Step 2b (mature-miRNA annotation) starts at: "
+date
+Rscript 2b_annotation_smallRNA_matmiRNA_RMlast.R > ../../logs/step2b.log 2>&1
+echo -ne "Step 2b (mature-miRNA annotation) finished at: "
 date
 
 cd ../03_figures
@@ -44,6 +52,13 @@ echo -ne "Step 5 (tRNA/snoRNA position plots) starts at: "
 date
 Rscript 5_tRNA_snoRNA_position.widnows.R > ../../logs/step5.log 2>&1
 echo -ne "Step 5 (tRNA/snoRNA position plots) finished at: "
+date
+
+##step 6 (mature vs primary miRNA strategy comparison)
+echo -ne "Step 6 (miRNA strategy comparison) starts at: "
+date
+Rscript 6_compare_miRNA_strategies.R > ../../logs/step6.log 2>&1
+echo -ne "Step 6 (miRNA strategy comparison) finished at: "
 date
 
 echo -ne "The whole pipeline ends at: "
