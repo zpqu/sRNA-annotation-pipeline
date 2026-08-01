@@ -9,6 +9,7 @@ mygeneFeature = function(bam, type = "within"){
               ## type = "within": reads fully contained in the feature (default).
               ## type = "union": either the read is fully contained in the feature
               ## OR the feature is fully contained in the read (union containment).
+              ## type = "any": any overlap (>= 1 bp) between read and feature.
               for(m in 1:length(geneFeature.list)){
                     geneFeature.name = geneFeature.list[m]
 		    geneFeature.id = gsub("mm39\\.", "", geneFeature.name)
@@ -22,6 +23,9 @@ mygeneFeature = function(bam, type = "within"){
                       ol1 = findOverlaps(single.bam.gr, get(geneFeature.name), type = "within")
                       ol2 = findOverlaps(get(geneFeature.name), single.bam.gr, type = "within")
                       hit.ids = unique(c(queryHits(ol1), subjectHits(ol2)))
+                    }else if(type == "any"){
+                      single.bam.ol = findOverlaps(single.bam.gr, get(geneFeature.name), type = "any")
+                      hit.ids = unique(queryHits(single.bam.ol))
                     }else{
                       single.bam.ol = findOverlaps(single.bam.gr, get(geneFeature.name), type = "within")
                       hit.ids = unique(queryHits(single.bam.ol))
