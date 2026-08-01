@@ -1,9 +1,19 @@
-echo -ne "The whole pipeline starts at: "
+## reference genome assembly (must match config/genome.R, which can also be
+## overridden via SMALLRNA_GENOME): usage: run_smallRNA_annotation.sh [GENOME]
+GENOME="${1:-${SMALLRNA_GENOME:-mm39}}"
+export SMALLRNA_GENOME=$GENOME
+if [ ! -d "../DB/rdata_${GENOME}" ]; then
+    echo "ERROR: feature DB ../DB/rdata_${GENOME} not found."
+    echo "Build it first: cd scripts/R/00_build_DB && Rscript 0_build_annotation_DB.R"
+    exit 1
+fi
+echo -ne "Reference genome: $GENOME. The whole pipeline starts at: "
 date
 
 ## clean previous results (output subfolders and logs)
 for d in ../output/rdata ../output/tables ../output/figures \
          ../output_matmiRNA/rdata ../output_matmiRNA/tables ../output_matmiRNA/figures logs; do
+    mkdir -p "$d"
     if [ "$(ls -A $d)" ]; then
         rm -r ${d}/*
     fi

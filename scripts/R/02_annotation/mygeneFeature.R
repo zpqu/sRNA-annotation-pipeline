@@ -12,8 +12,7 @@ mygeneFeature = function(bam, type = "within"){
               ## type = "any": any overlap (>= 1 bp) between read and feature.
               for(m in 1:length(geneFeature.list)){
                     geneFeature.name = geneFeature.list[m]
-		    geneFeature.id = gsub("mm39\\.", "", geneFeature.name)
-                    geneFeature.id = gsub("refGene\\.NM\\.", "", geneFeature.id)
+                    geneFeature.id = gsub("refGene\\.NM\\.", "", geneFeature.name)
                     geneFeature.id = gsub("\\.grl", "", geneFeature.id)
 		    geneFeature.id = gsub("\\.gr", "", geneFeature.id)
 
@@ -41,8 +40,7 @@ mygeneFeature = function(bam, type = "within"){
               }
              for(g in 1:length(geneFeature.list)){
                     geneFeature.name = geneFeature.list[g]
-		    geneFeature.id = gsub("mm39\\.", "", geneFeature.name)
-                    geneFeature.id = gsub("refGene\\.NM\\.", "", geneFeature.id)
+                    geneFeature.id = gsub("refGene\\.NM\\.", "", geneFeature.name)
                     geneFeature.id = gsub("\\.grl", "", geneFeature.id)
 		    geneFeature.id = gsub("\\.gr", "", geneFeature.id)
 

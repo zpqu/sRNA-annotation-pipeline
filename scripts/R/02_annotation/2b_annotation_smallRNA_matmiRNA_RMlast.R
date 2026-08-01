@@ -2,43 +2,46 @@
 ##Author: Zhipeng
 ## Modified: mature-miRNA strategy (2b)
 ## Same annotation logic as 2_annotation_smallRNA_RMlast.R, but the miRNA
-## category is annotated with MATURE miRNA loci (mm39.matmiRNA.gr, miRBase
+## category is annotated with MATURE miRNA loci (matmiRNA.gr, miRBase
 ## v22, ~22 nt) instead of primary miRNA transcripts (primiRNA).
 ## Priority: matmiRNA>snoRNA>piRNA>tRNA>RM>refGene_NM_exon>refGene_NM_intron>lincRNA
 ## >antisense_tRNA>antisense_RM>antisense_NM_exon>antisense_NM_intron>antisense_lincRNA
 ## Reads are annotated as non-redundant unique reads (chr/start/end/strand).
 ## All outputs are written to output_matmiRNA/ so the primary-miRNA strategy
 ## results in output/ are kept intact for comparison.
+## The reference genome (and the feature DB directory) is set in config/genome.R.
 
 library(GenomicFeatures)
 library(data.table)
 rm(list = ls())
 
+source("../../../config/genome.R")
+
 ###load genomic features (mature miRNA replaces primary miRNA)
-load("../../../DB/rdata/mm39.matmiRNA.gr.RData")
-load("../../../DB/rdata/mm39.snoRNA.gr.RData")
-load("../../../DB/rdata/mm39.piRNA.gr.RData")
-load("../../../DB/rdata/mm39.tRNA.gr.RData")
-load("../../../DB/rdata/mm39.RM.gr.RData")
-load("../../../DB/rdata/mm39.refGene.NM.exon.grl.RData")
-load("../../../DB/rdata/mm39.refGene.NM.intron.grl.RData")
-load("../../../DB/rdata/mm39.lincRNA.exon.grl.RData")
+load(file.path(db.dir, "matmiRNA.gr.RData"))
+load(file.path(db.dir, "snoRNA.gr.RData"))
+load(file.path(db.dir, "piRNA.gr.RData"))
+load(file.path(db.dir, "tRNA.gr.RData"))
+load(file.path(db.dir, "RM.gr.RData"))
+load(file.path(db.dir, "refGene.NM.exon.grl.RData"))
+load(file.path(db.dir, "refGene.NM.intron.grl.RData"))
+load(file.path(db.dir, "lincRNA.exon.grl.RData"))
 
 #load additional gene features
-load("../../../DB/rdata/mm39.refGene.NM.CDS.grl.RData")
-load("../../../DB/rdata/mm39.refGene.NM.5UTR.grl.RData")
-load("../../../DB/rdata/mm39.refGene.NM.3UTR.grl.RData")
-load("../../../DB/rdata/mm39.refGene.NM.up1k.grl.RData")
-load("../../../DB/rdata/mm39.refGene.NM.down1k.grl.RData")
+load(file.path(db.dir, "refGene.NM.CDS.grl.RData"))
+load(file.path(db.dir, "refGene.NM.5UTR.grl.RData"))
+load(file.path(db.dir, "refGene.NM.3UTR.grl.RData"))
+load(file.path(db.dir, "refGene.NM.up1k.grl.RData"))
+load(file.path(db.dir, "refGene.NM.down1k.grl.RData"))
 
 ####make genomic feature list or gene feature list
-genomicFeature.id = c("mm39.matmiRNA.gr", "mm39.snoRNA.gr", "mm39.piRNA.gr",
-		  "mm39.tRNA.gr", "mm39.RM.gr", "mm39.refGene.NM.exon.grl",
-		  "mm39.refGene.NM.intron.grl",
-		  "mm39.lincRNA.exon.grl")
-geneFeature.list = c("mm39.refGene.NM.CDS.grl", "mm39.refGene.NM.5UTR.grl",
-	       "mm39.refGene.NM.3UTR.grl", "mm39.refGene.NM.intron.grl",
-	       "mm39.refGene.NM.up1k.grl", "mm39.refGene.NM.down1k.grl", "mm39.RM.gr")
+genomicFeature.id = c("matmiRNA.gr", "snoRNA.gr", "piRNA.gr",
+		  "tRNA.gr", "RM.gr", "refGene.NM.exon.grl",
+		  "refGene.NM.intron.grl",
+		  "lincRNA.exon.grl")
+geneFeature.list = c("refGene.NM.CDS.grl", "refGene.NM.5UTR.grl",
+	       "refGene.NM.3UTR.grl", "refGene.NM.intron.grl",
+	       "refGene.NM.up1k.grl", "refGene.NM.down1k.grl", "RM.gr")
 
 ###
 source("mygeneFeature.R")
@@ -98,8 +101,7 @@ for(i in seq(along = files)){
       ##sense
       for(j in 1:length(genomicFeature.id)){
       	    feature.name = genomicFeature.id[j]
-	    feature.id = gsub("mm39\\.", "", feature.name)
-	    feature.id = gsub("\\.grl", "", feature.id)
+	    feature.id = gsub("\\.grl", "", feature.name)
 	    feature.id = gsub("\\.gr", "", feature.id)
 	    
 	    test.bam.ol = NULL
@@ -163,8 +165,7 @@ for(i in seq(along = files)){
       ##antisense
       for(k in 1:length(genomicFeature.id)){
             feature.name = genomicFeature.id[k]
-            feature.id = gsub("mm39\\.", "", feature.name)
-            feature.id = gsub("\\.grl", "", feature.id)
+            feature.id = gsub("\\.grl", "", feature.name)
             feature.id = gsub("\\.gr", "", feature.id)
 
             test.bam.ol = NULL

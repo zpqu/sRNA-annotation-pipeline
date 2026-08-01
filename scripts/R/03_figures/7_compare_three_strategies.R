@@ -19,6 +19,8 @@ library(GenomicRanges)
 
 out = function(...) cat(sprintf(...), "\n")
 
+source("../../../config/genome.R")
+
 ## ---- load the three strategies --------------------------------------------------
 t2b.list = list(
   primiRNA = read.csv("../../../output/tables/Table2b_annotation_count_all_reads.csv"),
@@ -123,11 +125,11 @@ for(s in unique(t2b.list$matmiRNA$sample)){
 write.csv(cat.tab, "../../../output_union/tables/Table3b_union_added_matmiRNA_reads.csv", row.names = FALSE)
 
 ## ---- 4) top mature miRNAs under B vs C ---------------------------------------------
-load("../../../DB/rdata/mm39.matmiRNA.gr.RData")
-mm39.matmiRNA.gr = mm39.matmiRNA.gr[!duplicated(paste(seqnames(mm39.matmiRNA.gr),
-                                                      start(mm39.matmiRNA.gr),
-                                                      end(mm39.matmiRNA.gr),
-                                                      strand(mm39.matmiRNA.gr)))]
+load(file.path(db.dir, "matmiRNA.gr.RData"))
+matmiRNA.gr = matmiRNA.gr[!duplicated(paste(seqnames(matmiRNA.gr),
+                                                      start(matmiRNA.gr),
+                                                      end(matmiRNA.gr),
+                                                      strand(matmiRNA.gr)))]
 expr.tab = data.table()
 for(strategy in c("B_matmiRNA_within", "C_matmiRNA_union")){
   dir = ifelse(strategy == "B_matmiRNA_within", "../../../output_matmiRNA/rdata", "../../../output_union/rdata")
@@ -137,9 +139,9 @@ for(strategy in c("B_matmiRNA_within", "C_matmiRNA_union")){
     s = gsub("\\.bam\\.annotated\\.gr\\.RData", "", f)
     g = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "matmiRNA"]
     if(length(g) == 0) next
-    ol = findOverlaps(g, mm39.matmiRNA.gr, type = "any")
+    ol = findOverlaps(g, matmiRNA.gr, type = "any")
     hit = data.table(sample = s, strategy = strategy,
-                     name = mm39.matmiRNA.gr$Name[subjectHits(ol)],
+                     name = matmiRNA.gr$Name[subjectHits(ol)],
                      rid = queryHits(ol),
                      count = as.numeric(g$count[queryHits(ol)]))
     hit = hit[, .(n_unique = length(unique(rid)), n_reads = base::sum(count)), by = .(sample, strategy, name)]

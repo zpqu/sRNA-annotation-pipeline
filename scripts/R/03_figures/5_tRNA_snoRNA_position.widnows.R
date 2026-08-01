@@ -2,8 +2,8 @@
 ##Author: Zhipeng
 ## This script makes plots for the position distribution of small RNA reads
 ## with respect to tRNA and snoRNA genes (step 5).
-## mm39 features are used. Reads are taken from the step-2 annotated objects
-## (rdata/*.bam.annotated.gr.RData), which carry a 'type' column ("tRNA",
+## Features for the reference genome set in config/genome.R are used. Reads are
+## taken from the step-2 annotated objects (rdata/*.bam.annotated.gr.RData),
 ## "AS.tRNA", "snoRNA", "AS.snoRNA", ...) and the non-redundant read 'count'.
 ## Window counts are weighted by 'count'. For each gene a 21 bp window is slid
 ## in 1 bp steps along the gene body, and the mean weighted read count per
@@ -14,6 +14,8 @@ suppressMessages(library(GenomicAlignments))
 suppressMessages(library(ggplot2))
 suppressMessages(library(scales))
 rm(list = ls())
+
+source("../../../config/genome.R")
 
 ## ---- sliding 21 bp windows (1 bp step) along each gene body -----------------
 sliding.windows = function(gr){
@@ -49,17 +51,17 @@ weighted.counts = function(wins, reads, cnt){
 }
 
 ## ---- format tRNAs -----------------------------------------------------------
-load("../../../DB/rdata/mm39.tRNA.gr.RData")
-mm39.tRNA.20bp.gr = sliding.windows(mm39.tRNA.gr)
-save(mm39.tRNA.20bp.gr, file = "../../../output/rdata/mm39.tRNA.20bp.gr.RData")
-print(paste("tRNA windows:", length(mm39.tRNA.20bp.gr)))
+load(file.path(db.dir, "tRNA.gr.RData"))
+tRNA.20bp.gr = sliding.windows(tRNA.gr)
+save(tRNA.20bp.gr, file = "../../../output/rdata/tRNA.20bp.gr.RData")
+print(paste("tRNA windows:", length(tRNA.20bp.gr)))
 
 ## ---- format snoRNAs (genes longer than 20 bp) --------------------------------
-load("../../../DB/rdata/mm39.snoRNA.gr.RData")
-mm39.snoRNA.gr = mm39.snoRNA.gr[width(mm39.snoRNA.gr) > 20]
-mm39.snoRNA.20bp.gr = sliding.windows(mm39.snoRNA.gr)
-save(mm39.snoRNA.20bp.gr, file = "../../../output/rdata/mm39.snoRNA.20bp.gr.RData")
-print(paste("snoRNA windows:", length(mm39.snoRNA.20bp.gr)))
+load(file.path(db.dir, "snoRNA.gr.RData"))
+snoRNA.gr = snoRNA.gr[width(snoRNA.gr) > 20]
+snoRNA.20bp.gr = sliding.windows(snoRNA.gr)
+save(snoRNA.20bp.gr, file = "../../../output/rdata/snoRNA.20bp.gr.RData")
+print(paste("snoRNA windows:", length(snoRNA.20bp.gr)))
 
 ## ---- count reads per window, per sample --------------------------------------
 tRNA.dis.all.df = NULL
@@ -78,22 +80,22 @@ for(i in seq(along = files)){
       ## tRNA windows
       test.bam.tRNA.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "tRNA"]
       test.bam.tRNA_AS.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "AS.tRNA"]
-      mm39.tRNA.20bp.gr$sense = weighted.counts(mm39.tRNA.20bp.gr, test.bam.tRNA.gr,
+      tRNA.20bp.gr$sense = weighted.counts(tRNA.20bp.gr, test.bam.tRNA.gr,
                                                 cnt[reads.bam.annotated.gr$type == "tRNA"])
-      mm39.tRNA.20bp.gr$antisense = weighted.counts(mm39.tRNA.20bp.gr, test.bam.tRNA_AS.gr,
+      tRNA.20bp.gr$antisense = weighted.counts(tRNA.20bp.gr, test.bam.tRNA_AS.gr,
                                                     cnt[reads.bam.annotated.gr$type == "AS.tRNA"])
-      mm39.tRNA.20bp.gr$sample = rep(sample.name, length(mm39.tRNA.20bp.gr))
-      tRNA.dis.all.df = rbind(tRNA.dis.all.df, as.data.frame(mm39.tRNA.20bp.gr))
+      tRNA.20bp.gr$sample = rep(sample.name, length(tRNA.20bp.gr))
+      tRNA.dis.all.df = rbind(tRNA.dis.all.df, as.data.frame(tRNA.20bp.gr))
 
       ## snoRNA windows
       test.bam.snoRNA.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "snoRNA"]
       test.bam.snoRNA_AS.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "AS.snoRNA"]
-      mm39.snoRNA.20bp.gr$sense = weighted.counts(mm39.snoRNA.20bp.gr, test.bam.snoRNA.gr,
+      snoRNA.20bp.gr$sense = weighted.counts(snoRNA.20bp.gr, test.bam.snoRNA.gr,
                                                   cnt[reads.bam.annotated.gr$type == "snoRNA"])
-      mm39.snoRNA.20bp.gr$antisense = weighted.counts(mm39.snoRNA.20bp.gr, test.bam.snoRNA_AS.gr,
+      snoRNA.20bp.gr$antisense = weighted.counts(snoRNA.20bp.gr, test.bam.snoRNA_AS.gr,
                                                       cnt[reads.bam.annotated.gr$type == "AS.snoRNA"])
-      mm39.snoRNA.20bp.gr$sample = rep(sample.name, length(mm39.snoRNA.20bp.gr))
-      snoRNA.dis.all.df = rbind(snoRNA.dis.all.df, as.data.frame(mm39.snoRNA.20bp.gr))
+      snoRNA.20bp.gr$sample = rep(sample.name, length(snoRNA.20bp.gr))
+      snoRNA.dis.all.df = rbind(snoRNA.dis.all.df, as.data.frame(snoRNA.20bp.gr))
 }
 
 save(tRNA.dis.all.df, file = "../../../output/rdata/tRNA.20bp.dis.all.df.RData")

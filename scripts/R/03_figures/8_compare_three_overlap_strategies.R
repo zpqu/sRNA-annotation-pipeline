@@ -21,6 +21,8 @@ library(GenomicRanges)
 
 out = function(...) cat(sprintf(...), "\n")
 
+source("../../../config/genome.R")
+
 strategy.list = c("A_matmiRNA_any" = "output_any",
                   "B_matmiRNA_within" = "output_matmiRNA",
                   "C_matmiRNA_union" = "output_union")
@@ -98,7 +100,7 @@ write.csv(cat.tot[order(sample, -B_matmiRNA_within)], "../../../output_any/table
 
 ## read-movement cross-tabulation (per read position: type in A vs type in B)
 mov.tab = data.table()
-for(s in c("Cumulus-cells", "Granulosa-cells")){
+for(s in samples){
   gr.list = list()
   for(st in names(strategy.list)){
     load(paste0("../../../", strategy.list[[st]], "/rdata/", s, ".bam.annotated.gr.RData"))
@@ -132,11 +134,11 @@ for(k in 1:min(10, nrow(mov.BC)))
   out("  %-14s -> %-14s %12.0f", mov.BC$typeB[k], mov.BC$typeC[k], mov.BC$n_reads[k])
 
 ## ---- 4) mature-miRNA-focused -------------------------------------------------------
-load("../../../DB/rdata/mm39.matmiRNA.gr.RData")
-mm39.matmiRNA.gr = mm39.matmiRNA.gr[!duplicated(paste(seqnames(mm39.matmiRNA.gr),
-                                                      start(mm39.matmiRNA.gr),
-                                                      end(mm39.matmiRNA.gr),
-                                                      strand(mm39.matmiRNA.gr)))]
+load(file.path(db.dir, "matmiRNA.gr.RData"))
+matmiRNA.gr = matmiRNA.gr[!duplicated(paste(seqnames(matmiRNA.gr),
+                                                      start(matmiRNA.gr),
+                                                      end(matmiRNA.gr),
+                                                      strand(matmiRNA.gr)))]
 expr.tab = data.table()
 for(st in names(strategy.list)){
   dir = strategy.list[[st]]
@@ -146,9 +148,9 @@ for(st in names(strategy.list)){
     s = gsub("\\.bam\\.annotated\\.gr\\.RData", "", f)
     g = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "matmiRNA"]
     if(length(g) == 0) next
-    ol = findOverlaps(g, mm39.matmiRNA.gr, type = "any")
+    ol = findOverlaps(g, matmiRNA.gr, type = "any")
     hit = data.table(sample = s, strategy = st,
-                     name = mm39.matmiRNA.gr$Name[subjectHits(ol)],
+                     name = matmiRNA.gr$Name[subjectHits(ol)],
                      rid = queryHits(ol),
                      count = as.numeric(g$count[queryHits(ol)]))
     hit = hit[, .(n_unique = length(unique(rid)), n_reads = base::sum(count)),
@@ -177,7 +179,7 @@ for(s in unique(expr.tab$sample)){
 }
 
 ## ---- 5) strand specificity for strategy A -------------------------------------------
-for(s in c("Cumulus-cells", "Granulosa-cells")){
+for(s in samples){
   ann = read.delim(paste0("../../../output_any/tables/", s, ".read.annotation.count.txt"))
   dt = as.data.table(ann)
   dt[, type2 := sub("^AS\\.", "", Var1)]

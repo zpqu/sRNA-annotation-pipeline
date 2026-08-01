@@ -4,7 +4,7 @@
 ## (output/) with the mature-miRNA (matmiRNA) strategy (output_matmiRNA/).
 ## 1) side-by-side read.annotation composition (unique vs all reads, both samples)
 ## 2) miRNA read-size distribution for the two strategies
-## 3) top expressed mature miRNAs (identity resolved via mm39.matmiRNA.gr names)
+## 3) top expressed mature miRNAs (identity resolved via matmiRNA.gr names)
 ## 4) fraction of primiRNA-annotated reads that are NOT at mature miRNA positions
 ## Outputs are written to output_matmiRNA/figures and output_matmiRNA/tables.
 
@@ -14,6 +14,8 @@ library(data.table)
 library(GenomicRanges)
 
 out = function(...) cat(sprintf(...), "\n")
+
+source("../../../config/genome.R")
 
 ## ---- load both strategies -----------------------------------------------------
 t2a.pri = read.csv("../../../output/tables/Table2a_annotation_count_unique_reads.csv")
@@ -92,11 +94,11 @@ ggsave(p.size, file = "../../../output_matmiRNA/figures/Comparison2_miRNA_size_d
        width = 8, height = 7)
 
 ## ---- 3) top expressed mature miRNAs --------------------------------------------
-load("../../../DB/rdata/mm39.matmiRNA.gr.RData")
-mm39.matmiRNA.gr = mm39.matmiRNA.gr[!duplicated(paste(seqnames(mm39.matmiRNA.gr),
-                                                      start(mm39.matmiRNA.gr),
-                                                      end(mm39.matmiRNA.gr),
-                                                      strand(mm39.matmiRNA.gr)))]
+load(file.path(db.dir, "matmiRNA.gr.RData"))
+matmiRNA.gr = matmiRNA.gr[!duplicated(paste(seqnames(matmiRNA.gr),
+                                                      start(matmiRNA.gr),
+                                                      end(matmiRNA.gr),
+                                                      strand(matmiRNA.gr)))]
 mat.tab = data.table()
 files = list.files("../../../output_matmiRNA/rdata", pattern = ".bam.annotated.gr.RData$")
 for(f in files){
@@ -104,9 +106,9 @@ for(f in files){
       s = gsub("\\.bam\\.annotated\\.gr\\.RData", "", f)
       g = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "matmiRNA"]
       if(length(g) == 0) next
-      ol = findOverlaps(g, mm39.matmiRNA.gr, type = "any")
+      ol = findOverlaps(g, matmiRNA.gr, type = "any")
       hit = data.table(sample = s,
-                       name = mm39.matmiRNA.gr$Name[subjectHits(ol)],
+                       name = matmiRNA.gr$Name[subjectHits(ol)],
                        rid = queryHits(ol),
                        count = as.numeric(g$count[queryHits(ol)]))
       hit = hit[, .(n_unique = length(unique(rid)), n_reads = sum(count)), by = .(sample, name)]
@@ -123,8 +125,8 @@ for(s in unique(mat.tab$sample)){
 ## ---- 4) primiRNA reads NOT at mature positions ---------------------------------
 ## From the primiRNA strategy, how many reads fall inside pri-miRNA transcripts
 ## but outside all mature miRNA loci?
-load("../../../DB/rdata/mm39.primiRNA.gr.RData")
-load("../../../DB/rdata/mm39.matmiRNA.gr.RData")
+load(file.path(db.dir, "primiRNA.gr.RData"))
+load(file.path(db.dir, "matmiRNA.gr.RData"))
 for(f in files){
       load(paste0("../../../output_matmiRNA/rdata/", f))
       s = gsub("\\.bam\\.annotated\\.gr\\.RData", "", f)

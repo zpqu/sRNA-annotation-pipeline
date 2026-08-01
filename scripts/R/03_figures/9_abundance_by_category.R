@@ -5,9 +5,9 @@
 ## describe how reads are distributed across loci:
 ##   matmiRNA : per mature miRNA locus (miRBase Name, up to 2110 loci)
 ##   snoRNA   : per snoRNA gene (refGene gene_name, 135 loci)
-##   tRNA     : per tRNA gene (mm39_tRNAs gene_id, 1137 loci)
+##   tRNA     : per tRNA gene (<genome>_tRNAs gene_id, 1137 loci for mm39)
 ##   piRNA    : per read position (chr:start:end:strand) -- the piRNA feature set
-##              is 83 M predicted features, so per-read loci are used instead
+##              is ~83 M predicted features (mm39), so per-read loci are used instead
 ## Contents:
 ##   1) Table5a: per-category summary statistics (n loci, reads, median/mean log10,
 ##               Gini, top-1/5/10 % read shares, top locus, cross-sample tests)
@@ -24,8 +24,8 @@ library(GenomicRanges)
 
 out = function(...) cat(sprintf(...), "\n")
 
-samples = c("Cumulus-cells", "Granulosa-cells")
-dir.out = "../../../output_matmiRNA"
+source("../../../config/genome.R")
+dir.out = out.dir
 
 ## ---- per-locus read abundance for one category --------------------------------------
 locus.tab = data.table()
@@ -34,8 +34,8 @@ for(s in samples){
   for(cat in c("matmiRNA", "snoRNA", "tRNA")){
     g = reads.bam.annotated.gr[reads.bam.annotated.gr$type == cat]
     if(length(g) == 0) next
-    load(paste0("../../../DB/rdata/mm39.", cat, ".gr.RData"))
-    feat = get(paste0("mm39.", cat, ".gr"))
+    load(file.path(db.dir, paste0(cat, ".gr.RData")))
+    feat = get(paste0(cat, ".gr"))
     name.col = switch(cat, matmiRNA = "Name", snoRNA = "gene_name", tRNA = "gene_id")
     ol = findOverlaps(g, feat, type = "any")
     if(length(ol) == 0) next

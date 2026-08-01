@@ -2,7 +2,7 @@
 ##Author: Zhipeng
 ## Modified: mature-miRNA strategy with "any" overlap sense annotation (2d)
 ## Same pipeline as 2b_annotation_smallRNA_matmiRNA_RMlast.R (miRNA category =
-## MATURE miRNA loci, mm39.matmiRNA.gr, miRBase v22), but the SENSE annotation
+## MATURE miRNA loci, matmiRNA.gr, miRBase v22), but the SENSE annotation
 ## uses ANY overlap (>= 1 bp) between the read and the feature, instead of
 ## fully-contained. This captures reads that only partially overlap a feature
 ## (e.g. a read straddling a mature-miRNA locus boundary). Antisense annotation
@@ -18,31 +18,33 @@ library(GenomicFeatures)
 library(data.table)
 rm(list = ls())
 
+source("../../../config/genome.R")
+
 ###load genomic features (mature miRNA replaces primary miRNA)
-load("../../../DB/rdata/mm39.matmiRNA.gr.RData")
-load("../../../DB/rdata/mm39.snoRNA.gr.RData")
-load("../../../DB/rdata/mm39.piRNA.gr.RData")
-load("../../../DB/rdata/mm39.tRNA.gr.RData")
-load("../../../DB/rdata/mm39.RM.gr.RData")
-load("../../../DB/rdata/mm39.refGene.NM.exon.grl.RData")
-load("../../../DB/rdata/mm39.refGene.NM.intron.grl.RData")
-load("../../../DB/rdata/mm39.lincRNA.exon.grl.RData")
+load(file.path(db.dir, "matmiRNA.gr.RData"))
+load(file.path(db.dir, "snoRNA.gr.RData"))
+load(file.path(db.dir, "piRNA.gr.RData"))
+load(file.path(db.dir, "tRNA.gr.RData"))
+load(file.path(db.dir, "RM.gr.RData"))
+load(file.path(db.dir, "refGene.NM.exon.grl.RData"))
+load(file.path(db.dir, "refGene.NM.intron.grl.RData"))
+load(file.path(db.dir, "lincRNA.exon.grl.RData"))
 
 #load additional gene features
-load("../../../DB/rdata/mm39.refGene.NM.CDS.grl.RData")
-load("../../../DB/rdata/mm39.refGene.NM.5UTR.grl.RData")
-load("../../../DB/rdata/mm39.refGene.NM.3UTR.grl.RData")
-load("../../../DB/rdata/mm39.refGene.NM.up1k.grl.RData")
-load("../../../DB/rdata/mm39.refGene.NM.down1k.grl.RData")
+load(file.path(db.dir, "refGene.NM.CDS.grl.RData"))
+load(file.path(db.dir, "refGene.NM.5UTR.grl.RData"))
+load(file.path(db.dir, "refGene.NM.3UTR.grl.RData"))
+load(file.path(db.dir, "refGene.NM.up1k.grl.RData"))
+load(file.path(db.dir, "refGene.NM.down1k.grl.RData"))
 
 ####make genomic feature list or gene feature list
-genomicFeature.id = c("mm39.matmiRNA.gr", "mm39.snoRNA.gr", "mm39.piRNA.gr",
-		  "mm39.tRNA.gr", "mm39.RM.gr", "mm39.refGene.NM.exon.grl",
-		  "mm39.refGene.NM.intron.grl",
-		  "mm39.lincRNA.exon.grl")
-geneFeature.list = c("mm39.refGene.NM.CDS.grl", "mm39.refGene.NM.5UTR.grl",
-	       "mm39.refGene.NM.3UTR.grl", "mm39.refGene.NM.intron.grl",
-	       "mm39.refGene.NM.up1k.grl", "mm39.refGene.NM.down1k.grl", "mm39.RM.gr")
+genomicFeature.id = c("matmiRNA.gr", "snoRNA.gr", "piRNA.gr",
+		  "tRNA.gr", "RM.gr", "refGene.NM.exon.grl",
+		  "refGene.NM.intron.grl",
+		  "lincRNA.exon.grl")
+geneFeature.list = c("refGene.NM.CDS.grl", "refGene.NM.5UTR.grl",
+	       "refGene.NM.3UTR.grl", "refGene.NM.intron.grl",
+	       "refGene.NM.up1k.grl", "refGene.NM.down1k.grl", "RM.gr")
 
 ###
 source("mygeneFeature.R")
@@ -108,7 +110,6 @@ for(i in seq(along = files)){
       ##sense (any overlap >= 1 bp)
       for(j in 1:length(genomicFeature.id)){
       	    feature.name = genomicFeature.id[j]
-	    feature.id = gsub("mm39\\.", "", feature.name)
 	    feature.id = gsub("\\.grl", "", feature.id)
 	    feature.id = gsub("\\.gr", "", feature.id)
 	    
@@ -173,7 +174,6 @@ for(i in seq(along = files)){
       ##antisense
       for(k in 1:length(genomicFeature.id)){
             feature.name = genomicFeature.id[k]
-            feature.id = gsub("mm39\\.", "", feature.name)
             feature.id = gsub("\\.grl", "", feature.id)
             feature.id = gsub("\\.gr", "", feature.id)
 
