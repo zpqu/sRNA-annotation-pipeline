@@ -71,5 +71,13 @@ Rscript 6_compare_miRNA_strategies.R > ../../logs/step6.log 2>&1
 echo -ne "Step 6 (miRNA strategy comparison) finished at: "
 date
 
+cd ../04_summary
+##step 10 (end-of-pipeline summary)
+echo -ne "Step 10 (pipeline summary) starts at: "
+date
+Rscript 10_pipeline_summary.R > ../../logs/step10.log 2>&1
+echo -ne "Step 10 (pipeline summary) finished at: "
+date
+
 echo -ne "The whole pipeline ends at: "
 date

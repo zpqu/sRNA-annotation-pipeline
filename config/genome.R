@@ -21,7 +21,7 @@ genome  <- Sys.getenv("SMALLRNA_GENOME", unset = "mm39")  # env var overrides th
 
 ## project root, resolved regardless of the working directory the script is run from
 project.root <- if (basename(getwd()) %in% c("00_build_DB", "01_preprocess",
-                                              "02_annotation", "03_figures")) {
+                                              "02_annotation", "03_figures", "04_summary")) {
   "../../.."
 } else if (file.exists("config/genome.R")) {
   "."
