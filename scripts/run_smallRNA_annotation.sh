@@ -3,7 +3,12 @@
 ## Usage: run_smallRNA_annotation.sh [GENOME] [STRATEGY]
 ##
 ##   GENOME   reference genome assembly, default mm39 (also SMALLRNA_GENOME).
-##            Must match a feature DB built into ../DB/rdata_<GENOME>/
+##            The feature DB for the genome is auto-detected
+##            (DB/rdata_<GENOME>/ with the 24 feature objects) and, if missing
+##            or incomplete, rebuilt automatically via step 0
+##            (scripts/R/00_build_DB/0_build_annotation_DB.R). Set
+##            SMALLRNA_FORCE_REBUILD_DB=1 to force a rebuild of an existing DB
+##            (e.g. after changing the DB build script).
 ##   STRATEGY sense-annotation rule:
 ##              fully-contained  (default) read fully contained in the feature
 ##              union                     read within feature OR feature within read
@@ -30,11 +35,6 @@ case "$STRATEGY" in
 esac
 export SMALLRNA_GENOME=$GENOME
 export SMALLRNA_STRATEGY=$STRATEGY
-if [ ! -d "../DB/rdata_${GENOME}" ]; then
-    echo "ERROR: feature DB ../DB/rdata_${GENOME} not found."
-    echo "Build it first: cd scripts/R/00_build_DB && Rscript 0_build_annotation_DB.R"
-    exit 1
-fi
 echo -ne "Reference genome: $GENOME, strategy: $STRATEGY. The whole pipeline starts at: "
 date
 
@@ -55,6 +55,34 @@ run_R() {
     echo -ne "$log finished at: "
     date
 }
+
+## feature DB: auto-detect (DB/rdata_<GENOME>/ with >= 24 feature objects) and,
+## if missing or incomplete, rebuild it via step 0 (logs to logs/step0.log).
+DB_DIR="../DB/rdata_${GENOME}"
+DB_ORIG="../DB/original_data_${GENOME}"
+DB_N_OBJECTS=24
+db_built() {
+    [ -d "$DB_DIR" ] && [ "$(ls -1 "$DB_DIR"/*.RData 2>/dev/null | wc -l)" -ge "$DB_N_OBJECTS" ]
+}
+if [ "${SMALLRNA_FORCE_REBUILD_DB:-0}" = "1" ] || ! db_built; then
+    echo "Feature DB $DB_DIR is missing or incomplete; checking raw files ..."
+    missing=""
+    for f in refGene.gtf miRNA.gff3 tRNAs.bed RM.bed piRBase.bed piRNAdb.gtf; do
+        if [ ! -f "$DB_ORIG/$f" ]; then missing="$missing $f"; fi
+    done
+    if [ -n "$missing" ]; then
+        echo "ERROR: cannot build feature DB for $GENOME: raw files missing in $DB_ORIG:"
+        for f in $missing; do echo "  - $f"; done
+        exit 1
+    fi
+    echo "Building feature DB for $GENOME ..."
+    run_R R/00_build_DB 0_build_annotation_DB.R step0.log
+    if ! db_built; then
+        echo "ERROR: feature DB build failed for $GENOME (see logs/step0.log)"
+        exit 1
+    fi
+    echo "Feature DB for $GENOME is ready."
+fi
 
 if [ "$STRATEGY" == "comparison" ]; then
     ## step 1: shared pre-processing (runs once)
