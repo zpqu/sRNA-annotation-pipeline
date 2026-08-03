@@ -27,6 +27,8 @@ out = function(...) cat(sprintf(...), "\n")
 
 source("../../../config/genome.R")
 dir.out = out.dir
+dir.create(file.path(dir.out, "tables"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(dir.out, "figures"), recursive = TRUE, showWarnings = FALSE)
 
 ## ---- per-locus read abundance for one category --------------------------------------
 locus.tab = data.table()
