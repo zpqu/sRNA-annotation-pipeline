@@ -23,7 +23,55 @@
 ##   comparison      -> output/comparison/  (shared step-1 at the root, one
 ##                                           subfolder per strategy + comparison
 ##                                           analysis and summary at the root)
+
+usage() {
+    cat <<'EOF'
+Small-RNA annotation pipeline runner.
+
+Usage:
+  run_smallRNA_annotation.sh [GENOME] [STRATEGY]
+  run_smallRNA_annotation.sh -h | --help
+
+Arguments:
+  GENOME   reference genome assembly, default mm39 (also SMALLRNA_GENOME).
+           The feature DB for the genome is auto-detected (DB/rdata_<GENOME>/
+           with the 24 feature objects) and, if missing or incomplete, rebuilt
+           automatically via step 0 (scripts/R/00_build_DB/0_build_annotation_DB.R).
+  STRATEGY sense-annotation rule (also SMALLRNA_STRATEGY):
+             fully-contained  (default) read fully contained in the feature
+             union                     read within feature OR feature within read
+             any                       any overlap (>= 1 bp) between read and feature
+             comparison                runs fully-contained, union and any (each
+                                       through steps 2/3/4/5/9), then the
+                                       overlap-rule comparison (step 6) and the
+                                       end-of-pipeline summary (step 10)
+
+Output layout (config/genome.R):
+  single strategy -> output/            (tables/figures/rdata)
+  comparison      -> output/comparison/ (shared step-1 at the root, one subfolder
+                                         per strategy (fully_contained/, union/,
+                                         any/) plus the comparison analysis and
+                                         summary at the root)
+
+Environment:
+  SMALLRNA_GENOME              same as [GENOME]
+  SMALLRNA_STRATEGY            same as [STRATEGY]
+  SMALLRNA_FORCE_REBUILD_DB=1  force a feature-DB rebuild even if it is complete
+  SMALLRNA_SUBSTRATEGY         set by the runner inside comparison mode (do not set)
+
+Examples:
+  run_smallRNA_annotation.sh                 # mm39, fully-contained
+  run_smallRNA_annotation.sh hg38 union      # human, union rule
+  run_smallRNA_annotation.sh hg38 comparison # all three rules + comparison
+EOF
+}
+
 set -e
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help|help) usage; exit 0 ;;
+    esac
+done
 GENOME="${1:-${SMALLRNA_GENOME:-mm39}}"
 STRATEGY="${2:-${SMALLRNA_STRATEGY:-fully-contained}}"
 case "$STRATEGY" in
