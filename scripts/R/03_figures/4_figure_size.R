@@ -1,16 +1,24 @@
 ##Date: 21/07/2015
 ##Author: Zhipeng
-## This script is used to make plot for size distribution for all small RNA data
+## This script is used to make plot for size distribution for all small RNA data.
+## Reads the per-sample *.size.count.txt tables from the strategy output
+## directory resolved by config/genome.R (step 2).
 
-#library(GenomicFeatures)
 library(ggplot2)
 library(scales)
+rm(list = ls())
+
+source("../../../config/genome.R")
+dir.tab = file.path(out.dir, "tables")
+dir.fig = file.path(out.dir, "figures")
+dir.create(dir.fig, recursive = TRUE, showWarnings = FALSE)
 
 ###for all small RNAs
 all.read.df = NULL
-files = list.files(path = "../../../output/tables/", pattern = ".size.count.txt$")
+files = list.files(path = dir.tab, pattern = ".size.count.txt$")
+if(length(files) == 0) stop("no *.size.count.txt found in ", dir.tab, " (run step 2 first)")
 for(i in seq(along = files)){
-      file.name = paste("../../../output/tables/", files[i], sep = "")
+      file.name = file.path(dir.tab, files[i])
       class.name = sample.name = files[i]
       sample.name = gsub("\\.\\w+\\.size\\.count\\.txt", "", sample.name)
       sample.name = gsub("\\.(bwa|bowtie2)$", "", sample.name)
@@ -22,13 +30,13 @@ for(i in seq(along = files)){
       single.read.df = read.delim(file.name, header = T)
       single.read.df$sample = rep(sample.name, nrow(single.read.df))
       single.read.df$class = rep(class.name, nrow(single.read.df))
-			 
+
       single.read.df$per = single.read.df$Freq/sum(single.read.df$Freq)
       all.read.df = rbind(all.read.df, single.read.df)
 }
 
 ###
-class.list = c("read", "primiRNA", "piRNA", "snoRNA", "tRNA")
+class.list = c("read", "matmiRNA", "piRNA", "snoRNA", "tRNA")
 sample.num = length(unique(all.read.df$sample))
 if(sample.num < 4){
               fig.width = sample.num*4
@@ -43,11 +51,11 @@ for(j in 1:length(class.list)){
       p.sample.class.barplot = ggplot(data = single.class.df, aes(x = Var1, y = Freq)) +
 		   geom_bar(stat = "identity") +
 		   xlab("") + ylab("Count") +
-		   scale_y_continuous(labels = comma) +		   
+		   scale_y_continuous(labels = comma) +
 		   theme_bw() +
 #		   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
 		   facet_wrap(~sample, ncol = 4)
-      ggsave(p.sample.class.barplot, file = paste0("../../../output/figures/Fig2a.", class.list[j], "_size_barplot.pdf"), width = fig.width, height = fig.height)
+      ggsave(p.sample.class.barplot, file = file.path(dir.fig, paste0("Fig2a.", class.list[j], "_size_barplot.pdf")), width = fig.width, height = fig.height)
 
       p.sample.class.percent.plot = ggplot(data = single.class.df, aes(x = Var1, y = per)) +
 		   geom_bar(stat = "identity") +
@@ -56,5 +64,5 @@ for(j in 1:length(class.list)){
 		   theme_bw() +
 #		   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
 		   facet_wrap(~sample, ncol = 4)
-      ggsave(p.sample.class.percent.plot, file = paste0("../../../output/figures/Fig2b.", class.list[j], "_size_barplot.percentage.pdf"), width = fig.width, height = fig.height)
+      ggsave(p.sample.class.percent.plot, file = file.path(dir.fig, paste0("Fig2b.", class.list[j], "_size_barplot.percentage.pdf")), width = fig.width, height = fig.height)
 }

@@ -7,14 +7,15 @@
 ## size distribution against the count distribution/density, and export the
 ## underlying summaries as tables.
 ##
-## Outputs (step 1):
-##   rdata/<sample>.bam.gr.RData            all reads
-##   rdata/<sample>.bam.unique.gr.RData     non-redundant reads with 'count'
-##   plots/Figure1a/b.read_size_vs_count.pdf/.png
-##   output/Table1a_sample_summary.csv
-##   output/Table1b_read_size_distribution.csv
-##   output/Table1c_read_count_distribution.csv
-##   output/Table1d_read_size_vs_count.csv
+## Outputs (step 1, written under out.base = output/ or output/comparison/ in
+## comparison mode; the shared pre-processing stage runs once per pipeline run):
+##   <out.base>/rdata/<sample>.bam.gr.RData            all reads
+##   <out.base>/rdata/<sample>.bam.unique.gr.RData     non-redundant reads with 'count'
+##   <out.base>/figures/Figure1a/b.read_size_vs_count.pdf/.png
+##   <out.base>/tables/Table1a_sample_summary.csv
+##   <out.base>/tables/Table1b_read_size_distribution.csv
+##   <out.base>/tables/Table1c_read_count_distribution.csv
+##   <out.base>/tables/Table1d_read_size_vs_count.csv
 
 library(rtracklayer)
 library(GenomicFeatures)
@@ -26,9 +27,13 @@ library(scales)
 library(patchwork)
 rm(list = ls())
 
-if(!dir.exists("../../../output/rdata")) dir.create("../../../output/rdata", recursive = TRUE)
-if(!dir.exists("../../../output/figures")) dir.create("../../../output/figures", recursive = TRUE)
-if(!dir.exists("../../../output/tables")) dir.create("../../../output/tables", recursive = TRUE)
+source("../../../config/genome.R")
+dir.rdata = file.path(out.base, "rdata")
+dir.fig = file.path(out.base, "figures")
+dir.tab = file.path(out.base, "tables")
+if(!dir.exists(dir.rdata)) dir.create(dir.rdata, recursive = TRUE)
+if(!dir.exists(dir.fig)) dir.create(dir.fig, recursive = TRUE)
+if(!dir.exists(dir.tab)) dir.create(dir.tab, recursive = TRUE)
 
 files = list.files(path = "../../../bams/", pattern = ".bam$")
 summ.list = list()
@@ -72,9 +77,9 @@ for(i in seq(along = files)){
               "at", Sys.time()))
 
   ## ----- save -----------------------------------------------------------------
-  gr.name = paste("../../../output/rdata/", sam, ".bam.gr.RData", sep = "")
+  gr.name = file.path(dir.rdata, paste0(sam, ".bam.gr.RData"))
   save(reads.bam.gr, file = gr.name)
-  gr.unique.name = paste("../../../output/rdata/", sam, ".bam.unique.gr.RData", sep = "")
+  gr.unique.name = file.path(dir.rdata, paste0(sam, ".bam.unique.gr.RData"))
   save(reads.bam.unique.gr, file = gr.unique.name)
 
   ## ----- plot/table data -------------------------------------------------------
@@ -134,11 +139,11 @@ for(i in seq(along = files)){
     theme_bw() + rot.theme
 
   fig.base = paste0("Figure1", letters[i])
-  plot.name = paste("../../../output/figures/", fig.base, ".read_size_vs_count.pdf", sep = "")
+  plot.name = file.path(dir.fig, paste0(fig.base, ".read_size_vs_count.pdf"))
   pdf(plot.name, width = 15, height = 4.2)
   print(p.size + p.count + p.2d + plot_layout(ncol = 3, widths = c(1.4, 1, 1)))
   dev.off()
-  plot.name = paste("../../../output/figures/", fig.base, ".read_size_vs_count.png", sep = "")
+  plot.name = file.path(dir.fig, paste0(fig.base, ".read_size_vs_count.png"))
   png(plot.name, width = 4500, height = 1260, res = 300)
   print(p.size + p.count + p.2d + plot_layout(ncol = 3, widths = c(1.4, 1, 1)))
   dev.off()
@@ -153,9 +158,9 @@ size.tab = rbindlist(size.list)
 count.tab = rbindlist(count.list)
 bin.tab = rbindlist(bin.list)
 
-write.csv(summ.tab, "../../../output/tables/Table1a_sample_summary.csv", row.names = FALSE)
-write.csv(size.tab, "../../../output/tables/Table1b_read_size_distribution.csv", row.names = FALSE)
-write.csv(count.tab, "../../../output/tables/Table1c_read_count_distribution.csv", row.names = FALSE)
-write.csv(bin.tab, "../../../output/tables/Table1d_read_size_vs_count.csv", row.names = FALSE)
+write.csv(summ.tab, file.path(dir.tab, "Table1a_sample_summary.csv"), row.names = FALSE)
+write.csv(size.tab, file.path(dir.tab, "Table1b_read_size_distribution.csv"), row.names = FALSE)
+write.csv(count.tab, file.path(dir.tab, "Table1c_read_count_distribution.csv"), row.names = FALSE)
+write.csv(bin.tab, file.path(dir.tab, "Table1d_read_size_vs_count.csv"), row.names = FALSE)
 
-print("Tables saved to ../../../output/tables/: Table1a_sample_summary.csv, Table1b_read_size_distribution.csv, Table1c_read_count_distribution.csv, Table1d_read_size_vs_count.csv")
+print(paste0("Tables saved to ", dir.tab, ": Table1a_sample_summary.csv, Table1b_read_size_distribution.csv, Table1c_read_count_distribution.csv, Table1d_read_size_vs_count.csv"))

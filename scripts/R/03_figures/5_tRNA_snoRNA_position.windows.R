@@ -3,11 +3,11 @@
 ## This script makes plots for the position distribution of small RNA reads
 ## with respect to tRNA and snoRNA genes (step 5).
 ## Features for the reference genome set in config/genome.R are used. Reads are
-## taken from the step-2 annotated objects (rdata/*.bam.annotated.gr.RData),
-## "AS.tRNA", "snoRNA", "AS.snoRNA", ...) and the non-redundant read 'count'.
-## Window counts are weighted by 'count'. For each gene a 21 bp window is slid
-## in 1 bp steps along the gene body, and the mean weighted read count per
-## window position is plotted per sample.
+## taken from the step-2 annotated objects (rdata/*.bam.annotated.gr.RData in the
+## strategy output directory), "AS.tRNA", "snoRNA", "AS.snoRNA", ...) and the
+## non-redundant read 'count'. Window counts are weighted by 'count'. For each
+## gene a 21 bp window is slid in 1 bp steps along the gene body, and the mean
+## weighted read count per window position is plotted per sample.
 
 suppressMessages(library(GenomicRanges))
 suppressMessages(library(GenomicAlignments))
@@ -16,6 +16,9 @@ suppressMessages(library(scales))
 rm(list = ls())
 
 source("../../../config/genome.R")
+dir.rdata = file.path(out.dir, "rdata")
+dir.fig = file.path(out.dir, "figures")
+dir.create(dir.fig, recursive = TRUE, showWarnings = FALSE)
 
 ## ---- sliding 21 bp windows (1 bp step) along each gene body -----------------
 sliding.windows = function(gr){
@@ -53,23 +56,23 @@ weighted.counts = function(wins, reads, cnt){
 ## ---- format tRNAs -----------------------------------------------------------
 load(file.path(db.dir, "tRNA.gr.RData"))
 tRNA.20bp.gr = sliding.windows(tRNA.gr)
-save(tRNA.20bp.gr, file = "../../../output/rdata/tRNA.20bp.gr.RData")
+save(tRNA.20bp.gr, file = file.path(dir.rdata, "tRNA.20bp.gr.RData"))
 print(paste("tRNA windows:", length(tRNA.20bp.gr)))
 
 ## ---- format snoRNAs (genes longer than 20 bp) --------------------------------
 load(file.path(db.dir, "snoRNA.gr.RData"))
 snoRNA.gr = snoRNA.gr[width(snoRNA.gr) > 20]
 snoRNA.20bp.gr = sliding.windows(snoRNA.gr)
-save(snoRNA.20bp.gr, file = "../../../output/rdata/snoRNA.20bp.gr.RData")
+save(snoRNA.20bp.gr, file = file.path(dir.rdata, "snoRNA.20bp.gr.RData"))
 print(paste("snoRNA windows:", length(snoRNA.20bp.gr)))
 
 ## ---- count reads per window, per sample --------------------------------------
 tRNA.dis.all.df = NULL
 snoRNA.dis.all.df = NULL
-files = list.files(path = "../../../output/rdata/", pattern = ".bam.annotated.gr.RData$")
-if(length(files) == 0) stop("no *.bam.annotated.gr.RData found in ../../../output/rdata/ (run step 2 first)")
+files = list.files(path = dir.rdata, pattern = ".bam.annotated.gr.RData$")
+if(length(files) == 0) stop("no *.bam.annotated.gr.RData found in ", dir.rdata, " (run step 2 first)")
 for(i in seq(along = files)){
-      file.name = paste("../../../output/rdata/", files[i], sep = "")
+      file.name = file.path(dir.rdata, files[i])
       sample.name = files[i]
       sample.name = gsub("\\.bam\\.annotated\\.gr\\.RData", "", sample.name)
       sample.name = gsub("\\.(bwa|bowtie2)$", "", sample.name)
@@ -98,8 +101,8 @@ for(i in seq(along = files)){
       snoRNA.dis.all.df = rbind(snoRNA.dis.all.df, as.data.frame(snoRNA.20bp.gr))
 }
 
-save(tRNA.dis.all.df, file = "../../../output/rdata/tRNA.20bp.dis.all.df.RData")
-save(snoRNA.dis.all.df, file = "../../../output/rdata/snoRNA.20bp.dis.all.df.RData")
+save(tRNA.dis.all.df, file = file.path(dir.rdata, "tRNA.20bp.dis.all.df.RData"))
+save(snoRNA.dis.all.df, file = file.path(dir.rdata, "snoRNA.20bp.dis.all.df.RData"))
 
 ## ---- plot tRNA ---------------------------------------------------------------
 position.plot = function(dis.all.df, fig.base){
@@ -144,5 +147,5 @@ position.plot = function(dis.all.df, fig.base){
       print(paste("saved:", fig.base, Sys.time()))
 }
 
-position.plot(tRNA.dis.all.df, "../../../output/figures/Fig2c.tRNA_pos_barplot")
-position.plot(snoRNA.dis.all.df, "../../../output/figures/Fig2c.snoRNA_pos_barplot")
+position.plot(tRNA.dis.all.df, file.path(dir.fig, "Fig2c.tRNA_pos_barplot"))
+position.plot(snoRNA.dis.all.df, file.path(dir.fig, "Fig2c.snoRNA_pos_barplot"))

@@ -1,28 +1,43 @@
 ##Date: 21/07/2015
 ##Author: Zhipeng
-## Modified: mature-miRNA strategy (2b)
-## Same annotation logic as 2_annotation_smallRNA_RMlast.R, but the miRNA
-## category is annotated with MATURE miRNA loci (matmiRNA.gr, miRBase
-## v22, ~22 nt) instead of primary miRNA transcripts (primiRNA).
+## Step 2: small-RNA annotation, mature-miRNA strategy, parameterised by the
+## sense-annotation rule. The miRNA category is annotated with MATURE miRNA
+## loci (matmiRNA.gr, miRBase v22, ~22 nt). The sense rule is controlled by
+## config/genome.R (SMALLRNA_STRATEGY / SMALLRNA_SUBSTRATEGY):
+##   fully-contained : a read is annotated to a feature only if the read is
+##                      fully contained in the feature (findOverlaps type="within")
+##   union           : read within feature OR feature within read (union
+##                      containment; captures long reads spanning a small feature)
+##   any             : any overlap (>= 1 bp) between read and feature
+## Antisense annotation is always type="any" with ignore.strand = TRUE.
 ## Priority: matmiRNA>snoRNA>piRNA>tRNA>RM>refGene_NM_exon>refGene_NM_intron>lincRNA
 ## >antisense_tRNA>antisense_RM>antisense_NM_exon>antisense_NM_intron>antisense_lincRNA
 ## Reads are annotated as non-redundant unique reads (chr/start/end/strand).
-## All outputs are written to output_matmiRNA/ so the primary-miRNA strategy
-## results in output/ are kept intact for comparison.
-## The reference genome (and the feature DB directory) is set in config/genome.R.
-##
-## Extra output: per-read annotation + abundance tables for unique reads
-## (output_matmiRNA/tables/<sample>.unique_reads_annotation.csv and
-## Table_unique_reads_annotation.csv), one row per unique read, sorted by
-## expression (count) descending.
+## Outputs are written to the directory resolved by config/genome.R
+## (output/ for a single-strategy run; output/comparison/<strategy>/ inside a
+## comparison run):
+##   tables/<sample>.{matmiRNA,snoRNA,piRNA,tRNA}.{annotation,size}.count.txt
+##   tables/<sample>.{read.annotation,read.size}.count.txt
+##   tables/<sample>.unique_reads_annotation.csv   (per-read annotation + abundance)
+##   tables/Table_unique_reads_annotation.csv      (all samples combined)
+##   tables/Table2a_annotation_count_unique_reads.csv
+##   tables/Table2b_annotation_count_all_reads.csv
+##   tables/Table2m_mature_miRNA_expression.csv    (top expressed mature miRNAs)
+##   rdata/<sample>.bam.annotated.gr.RData
 
 library(GenomicFeatures)
 library(data.table)
 rm(list = ls())
 
 source("../../../config/genome.R")
+sense.rule <- if (cur.strategy == "union") "union" else if (cur.strategy == "any") "any" else "within"
+dir.tab  <- file.path(out.dir, "tables")
+dir.rdata <- file.path(out.dir, "rdata")
+dir.create(dir.tab, recursive = TRUE, showWarnings = FALSE)
+dir.create(dir.rdata, recursive = TRUE, showWarnings = FALSE)
+print(sprintf("annotation strategy (sense rule): %s (config cur.strategy=%s)", sense.rule, cur.strategy))
 
-###load genomic features (mature miRNA replaces primary miRNA)
+###load genomic features (mature miRNA)
 load(file.path(db.dir, "matmiRNA.gr.RData"))
 load(file.path(db.dir, "snoRNA.gr.RData"))
 load(file.path(db.dir, "piRNA.gr.RData"))
@@ -56,7 +71,7 @@ feature.id.vector = function(feature.name, tx2gn){
     u = unlist(f)
     if(!is.null(u$transcript_id) && !is.null(u$gene_name)){
       gn = as.character(u$gene_name); gi = as.character(u$gene_id)
-      gn[is.na(gn) | gn == ""] = gi[is.na(gn) | gi == ""]
+      gn[is.na(gn) | gn == ""] = gi[is.na(gi) | gi == ""]
       dt = unique(data.table(tx = as.character(u$transcript_id), id = gn))
       return(dt$id[match(names(f), dt$tx)])
     }
@@ -73,26 +88,56 @@ tx2gn = unique(data.table(transcript_id = as.character(unlist(refGene.NM.exon.gr
 fids.all = lapply(genomicFeature.id, feature.id.vector, tx2gn = tx2gn)
 names(fids.all) = genomicFeature.id
 
-### helper: for a findOverlaps result, return the specific feature id (and the
-### number of overlapping features) for each hit read, aligned to
-### unique(queryHits(ol)). piRNA uses the highest-scoring locus among the
-### overlapping piRNAs; other features use an arbitrary (first) hit.
-feature.hit.info = function(ol, feature.name, fids, type, ignore.strand = FALSE){
-  qh = queryHits(ol); sh = subjectHits(ol)
+### helper: for a list of query/subject hit pairs, return the specific feature id
+### (and the number of overlapping features) for each hit read, aligned to
+### unique(qh). piRNA uses the highest-scoring locus among the overlapping
+### piRNAs; other features use an arbitrary (first) hit. For the union rule the
+### "feature within read" direction (feature query, read subject) is added to the
+### candidate pairs before the arbitrary/score-based selection.
+feature.hit.info = function(qh, sh, feature.name, fids, rule, ignore.strand = FALSE){
+  if(length(qh) == 0) return(list(feature.id = character(0), n_features = integer(0)))
+  feat = get(feature.name)
+  if(rule == "union"){
+    ol2 = findOverlaps(feat, test.bam.gr, type = "within")
+    qh = c(qh, subjectHits(ol2)); sh = c(sh, queryHits(ol2))
+  }
+  ## distinct (read, feature) pairs: for the union rule the same pair can be
+  ## recorded twice (e.g. a read exactly coinciding with a feature), which would
+  ## otherwise inflate n_features.
+  keep.pair = !duplicated(paste(qh, sh, sep = ":"))
+  qh = qh[keep.pair]; sh = sh[keep.pair]
   rows = unique(qh)
-  if(length(rows) == 0) return(list(feature.id = character(0), n_features = integer(0)))
   nf = tabulate(qh, nbins = length(test.bam.gr))[rows]
   if(feature.name == "piRNA.gr"){
-    o = order(qh, -as.numeric(mcols(piRNA.gr)$score[sh]))
-    uq = qh[o]; us = sh[o]
-    keep = !duplicated(uq)
-    sub.map = us[keep]; names(sub.map) = uq[keep]
-    fid = fids[sub.map[as.character(rows)]]
+    ord = order(qh, -as.numeric(mcols(feat)$score[sh]))
+    keep = !duplicated(qh[ord]); map = sh[ord][keep]; names(map) = qh[ord][keep]
+    fid = fids[map[as.character(rows)]]
   }else{
-    fid = fids[findOverlaps(test.bam.gr[rows], get(feature.name), type = type,
-                            ignore.strand = ignore.strand, select = "arbitrary")]
+    if(rule == "union"){
+      keep = !duplicated(qh); map = sh[keep]; names(map) = qh[keep]
+      fid = fids[map[as.character(rows)]]
+    }else{
+      ol = findOverlaps(test.bam.gr[rows], feat, type = rule, ignore.strand = ignore.strand, select = "arbitrary")
+      fid = fids[ol]
+    }
   }
   list(feature.id = fid, n_features = nf)
+}
+
+### sense-hit query/subject pairs for the configured rule
+sense.hits = function(reads.gr, feature.gr){
+  if(sense.rule == "within"){
+    ol = findOverlaps(reads.gr, feature.gr, type = "within")
+    return(list(qh = queryHits(ol), sh = subjectHits(ol)))
+  }
+  if(sense.rule == "union"){
+    ol1 = findOverlaps(reads.gr, feature.gr, type = "within")
+    ol2 = findOverlaps(feature.gr, reads.gr, type = "within")
+    return(list(qh = c(queryHits(ol1), subjectHits(ol2)),
+                sh = c(subjectHits(ol1), queryHits(ol2))))
+  }
+  ol = findOverlaps(reads.gr, feature.gr, type = "any")
+  return(list(qh = queryHits(ol), sh = subjectHits(ol)))
 }
 
 ###
@@ -126,9 +171,12 @@ add.counts = function(category, group, counts){
 }
 
 sample.list = list()
-files = list.files(path = "../../../output/rdata", pattern = ".bam.unique.gr.RData$")
+mat.expr.list = list()
+dir.step1 = file.path(out.base, "rdata")
+files = list.files(path = dir.step1, pattern = ".bam.unique.gr.RData$")
+if(length(files) == 0) stop("no *.bam.unique.gr.RData found in ", dir.step1, " (run step 1 first)")
 for(i in seq(along = files)){
-      file.name = paste("../../../output/rdata/", files[i], sep = "")
+      file.name = file.path(dir.step1, files[i])
       sample = files[i]
       sample = gsub("\\.bam\\.unique\\.gr\\.RData", "", sample)
       sample = gsub("\\.(bwa|bowtie2)$", "", sample)
@@ -136,7 +184,7 @@ for(i in seq(along = files)){
       print(paste("Now is processing ...", sample, Sys.time()))
       load(file.name)
       test.all.id = c(1:length(reads.bam.unique.gr))
-      
+
       test.bam.gr = reads.bam.unique.gr
       test.bam.gr$type = NULL
       test.bam.gr$region = NULL
@@ -156,93 +204,92 @@ for(i in seq(along = files)){
       	    feature.name = genomicFeature.id[j]
 	    feature.id = gsub("\\.grl", "", feature.name)
 	    feature.id = gsub("\\.gr", "", feature.id)
-	    
-	    test.bam.ol = NULL
+
 	    test.bam.hit.gr = NULL
-	    test.bam.ol = findOverlaps(test.bam.gr, get(feature.name), type = "within")
-	    test.bam.hit.gr = test.bam.gr[unique(queryHits(test.bam.ol))]
+	    hs = sense.hits(test.bam.gr, get(feature.name))
+	    test.bam.hit.gr = test.bam.gr[unique(hs$qh)]
 	    test.bam.hit.gr$region = rep("NA", length(test.bam.hit.gr))
-	    hit.info = feature.hit.info(test.bam.ol, feature.name, fids.all[[feature.name]], "within")
+	    hit.info = feature.hit.info(hs$qh, hs$sh, feature.name, fids.all[[feature.name]], sense.rule)
 	    test.bam.hit.gr$feature.id = hit.info$feature.id
 	    test.bam.hit.gr$n_features = hit.info$n_features
 	    if(feature.id == "matmiRNA"){
-	    		  test.bam.hit.gr = mygeneFeature(bam = "test.bam.hit.gr")
+	    		  test.bam.hit.gr = mygeneFeature(bam = "test.bam.hit.gr", type = sense.rule)
 			  matmiRNA.geneFeature.count.df = count.by(test.bam.hit.gr$region, test.bam.hit.gr$count)
-			  write.table(matmiRNA.geneFeature.count.df, file = paste("../../../output_matmiRNA/tables/", sample, ".matmiRNA.annotation.count.txt", sep = ""),
+			  write.table(matmiRNA.geneFeature.count.df, file = file.path(dir.tab, paste(sample, ".matmiRNA.annotation.count.txt", sep = "")),
 			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  matmiRNA.size.count.df = count.by(width(test.bam.hit.gr), test.bam.hit.gr$count)
-			  write.table(matmiRNA.size.count.df, file = paste("../../../output_matmiRNA/tables/", sample, ".matmiRNA.size.count.txt", sep = ""),
+			  write.table(matmiRNA.size.count.df, file = file.path(dir.tab, paste(sample, ".matmiRNA.size.count.txt", sep = "")),
 			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  add.counts("matmiRNA.annotation", test.bam.hit.gr$region, test.bam.hit.gr$count)
 			  add.counts("matmiRNA.size", width(test.bam.hit.gr), test.bam.hit.gr$count)
 	    }
 	    if(feature.id == "snoRNA"){
-	    		  test.bam.hit.gr = mygeneFeature("test.bam.hit.gr")
+	    		  test.bam.hit.gr = mygeneFeature("test.bam.hit.gr", type = sense.rule)
 			  snoRNA.geneFeature.count.df = count.by(test.bam.hit.gr$region, test.bam.hit.gr$count)
-			  write.table(snoRNA.geneFeature.count.df, file = paste("../../../output_matmiRNA/tables/", sample, ".snoRNA.annotation.count.txt", sep = ""),
+			  write.table(snoRNA.geneFeature.count.df, file = file.path(dir.tab, paste(sample, ".snoRNA.annotation.count.txt", sep = "")),
 			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  snoRNA.size.count.df = count.by(width(test.bam.hit.gr), test.bam.hit.gr$count)
-			  write.table(snoRNA.size.count.df, file = paste("../../../output_matmiRNA/tables/", sample, ".snoRNA.size.count.txt", sep = ""),
+			  write.table(snoRNA.size.count.df, file = file.path(dir.tab, paste(sample, ".snoRNA.size.count.txt", sep = "")),
 			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  add.counts("snoRNA.annotation", test.bam.hit.gr$region, test.bam.hit.gr$count)
 			  add.counts("snoRNA.size", width(test.bam.hit.gr), test.bam.hit.gr$count)
 	    }
 	    if(feature.id == "piRNA"){
-	    		  test.bam.hit.gr = mygeneFeature("test.bam.hit.gr")
+	    		  test.bam.hit.gr = mygeneFeature("test.bam.hit.gr", type = sense.rule)
 			  piRNA.geneFeature.count.df = count.by(test.bam.hit.gr$region, test.bam.hit.gr$count)
-			  write.table(piRNA.geneFeature.count.df, file = paste("../../../output_matmiRNA/tables/", sample, ".piRNA.annotation.count.txt", sep = ""),
+			  write.table(piRNA.geneFeature.count.df, file = file.path(dir.tab, paste(sample, ".piRNA.annotation.count.txt", sep = "")),
 			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  piRNA.size.count.df = count.by(width(test.bam.hit.gr), test.bam.hit.gr$count)
-			  write.table(piRNA.size.count.df, file = paste("../../../output_matmiRNA/tables/", sample, ".piRNA.size.count.txt", sep = ""),
+			  write.table(piRNA.size.count.df, file = file.path(dir.tab, paste(sample, ".piRNA.size.count.txt", sep = "")),
 			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  add.counts("piRNA.annotation", test.bam.hit.gr$region, test.bam.hit.gr$count)
 			  add.counts("piRNA.size", width(test.bam.hit.gr), test.bam.hit.gr$count)
 	    }
 	    if(feature.id == "tRNA"){
-	    		  test.bam.hit.gr = mygeneFeature("test.bam.hit.gr")
+	    		  test.bam.hit.gr = mygeneFeature("test.bam.hit.gr", type = sense.rule)
 			  tRNA.geneFeature.count.df = count.by(test.bam.hit.gr$region, test.bam.hit.gr$count)
-			  write.table(tRNA.geneFeature.count.df, file = paste("../../../output_matmiRNA/tables/", sample, ".tRNA.annotation.count.txt", sep = ""),
+			  write.table(tRNA.geneFeature.count.df, file = file.path(dir.tab, paste(sample, ".tRNA.annotation.count.txt", sep = "")),
 			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  tRNA.size.count.df = count.by(width(test.bam.hit.gr), test.bam.hit.gr$count)
-			  write.table(tRNA.size.count.df, file = paste("../../../output_matmiRNA/tables/", sample, ".tRNA.size.count.txt", sep = ""),
+			  write.table(tRNA.size.count.df, file = file.path(dir.tab, paste(sample, ".tRNA.size.count.txt", sep = "")),
 			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  add.counts("tRNA.annotation", test.bam.hit.gr$region, test.bam.hit.gr$count)
 			  add.counts("tRNA.size", width(test.bam.hit.gr), test.bam.hit.gr$count)
 	    }
 	    test.bam.hit.gr$type = rep(feature.id, length(test.bam.hit.gr))
 	    test.bam.new.gr = c(test.bam.new.gr, test.bam.hit.gr)
-	    if(length(unique(queryHits(test.bam.ol))) == 0){
+	    if(length(unique(hs$qh)) == 0){
 	     test.bam.gr = test.bam.gr
 	    }else{
-	     test.bam.gr = test.bam.gr[!test.bam.gr$rm.key %in% test.bam.gr$rm.key[unique(queryHits(test.bam.ol))]]
+	     test.bam.gr = test.bam.gr[!test.bam.gr$rm.key %in% test.bam.gr$rm.key[unique(hs$qh)]]
 	    }
       }
 
-      ##antisense
+      ##antisense (always any-overlap, ignore strand)
       for(k in 1:length(genomicFeature.id)){
             feature.name = genomicFeature.id[k]
             feature.id = gsub("\\.grl", "", feature.name)
             feature.id = gsub("\\.gr", "", feature.id)
 
-            test.bam.ol = NULL
             test.bam.hit.gr = NULL
             test.bam.ol = findOverlaps(test.bam.gr, get(feature.name), type = "any", ignore.strand = T)
             test.bam.hit.gr = test.bam.gr[unique(queryHits(test.bam.ol))]
 	    test.bam.hit.gr$region = rep("NA", length(test.bam.hit.gr))
-	    hit.info = feature.hit.info(test.bam.ol, feature.name, fids.all[[feature.name]], "any", ignore.strand = T)
+	    hit.info = feature.hit.info(queryHits(test.bam.ol), subjectHits(test.bam.ol), feature.name,
+	                                fids.all[[feature.name]], "any", ignore.strand = T)
 	    test.bam.hit.gr$feature.id = hit.info$feature.id
 	    test.bam.hit.gr$n_features = hit.info$n_features
             test.bam.hit.gr$type = rep(paste("AS.", feature.id, sep = ""), length(test.bam.hit.gr))
             test.bam.new.gr = c(test.bam.new.gr, test.bam.hit.gr)
             if(length(unique(queryHits(test.bam.ol))) == 0){
-	        test.bam.gr = test.bam.gr  
+	        test.bam.gr = test.bam.gr
             }else{
 	    	test.bam.gr = test.bam.gr[!test.bam.gr$rm.key %in% test.bam.gr$rm.key[unique(queryHits(test.bam.ol))]]
             }
-  
+
       }
 
-      ##other      
+      ##other
       test.bam.other.gr = test.bam.gr
       test.bam.other.gr$region = rep("NA", length(test.bam.other.gr))
       test.bam.other.gr$type = rep("other", length(test.bam.other.gr))
@@ -255,12 +302,13 @@ for(i in seq(along = files)){
       add.counts("read.size", width(test.bam.new.gr), test.bam.new.gr$count)
       reads.bam.annotated.gr = test.bam.new.gr
       reads.bam.annotated.gr$rm.key = NULL
-      save(reads.bam.annotated.gr, file = paste("../../../output_matmiRNA/rdata/", sample, ".bam.annotated.gr.RData", sep = ""))
-      write.table(read.annotation.count.df, file = paste("../../../output_matmiRNA/tables/", sample, ".read.annotation.count.txt", sep = ""), quote = F, sep = "\t", col.names = T, row.names = F)
-      write.table(read.size.count.df, file = paste("../../../output_matmiRNA/tables/", sample, ".read.size.count.txt", sep = ""), quote = F, sep = "\t", col.names = T, row.names = F)
+      save(reads.bam.annotated.gr, file = file.path(dir.rdata, paste(sample, ".bam.annotated.gr.RData", sep = "")))
+      write.table(read.annotation.count.df, file = file.path(dir.tab, paste(sample, ".read.annotation.count.txt", sep = "")), quote = F, sep = "\t", col.names = T, row.names = F)
+      write.table(read.size.count.df, file = file.path(dir.tab, paste(sample, ".read.size.count.txt", sep = "")), quote = F, sep = "\t", col.names = T, row.names = F)
 
       ### per-read annotation + abundance table (unique reads, sorted by expression)
       sample.dt = data.table(
+        sample = sample,
         read_id = seq_along(reads.bam.annotated.gr),
         chr = as.character(seqnames(reads.bam.annotated.gr)),
         start = start(reads.bam.annotated.gr),
@@ -275,15 +323,28 @@ for(i in seq(along = files)){
         gene_context = as.character(reads.bam.annotated.gr$region),
         n_features = as.integer(reads.bam.annotated.gr$n_features))
       setorder(sample.dt, -count, chr, start, end)
-      fwrite(sample.dt, file = paste("../../../output_matmiRNA/tables/", sample, ".unique_reads_annotation.csv", sep = ""))
-      sample.list[[i]] = copy(sample.dt)[, sample := sample]
+      fwrite(sample.dt, file = file.path(dir.tab, paste(sample, ".unique_reads_annotation.csv", sep = "")))
+      sample.list[[i]] = sample.dt
+
+      ### top expressed mature miRNAs (Table2m)
+      mat = sample.dt[category == "matmiRNA"]
+      if(nrow(mat) > 0){
+        mat.dt = mat[!is.na(feature_id), .(n_unique = .N, n_reads = sum(count)),
+                     by = .(sample, name = feature_id)]
+        mat.expr.list[[i]] = mat.dt[order(-n_reads)]
+      }
 }
 
 ## ----- per-read annotation + abundance table, all samples combined ------------
 all.samples.dt = rbindlist(sample.list)
-fwrite(all.samples.dt, "../../../output_matmiRNA/tables/Table_unique_reads_annotation.csv")
+fwrite(all.samples.dt, file.path(dir.tab, "Table_unique_reads_annotation.csv"))
+
+## ----- top mature miRNA expression ----------------------------------------------
+mat.expr = rbindlist(mat.expr.list)
+setorder(mat.expr, sample, -n_reads)
+write.csv(mat.expr, file.path(dir.tab, "Table2m_mature_miRNA_expression.csv"), row.names = FALSE)
 
 ## ----- consolidated count tables (unique reads vs all reads) -------------------
-write.csv(unique.all.tab, "../../../output_matmiRNA/tables/Table2a_annotation_count_unique_reads.csv", row.names = FALSE)
-write.csv(reads.all.tab, "../../../output_matmiRNA/tables/Table2b_annotation_count_all_reads.csv", row.names = FALSE)
-print("Tables saved to ../../../output_matmiRNA/tables/: Table2a_annotation_count_unique_reads.csv, Table2b_annotation_count_all_reads.csv, Table_unique_reads_annotation.csv, <sample>.unique_reads_annotation.csv")
+write.csv(unique.all.tab, file.path(dir.tab, "Table2a_annotation_count_unique_reads.csv"), row.names = FALSE)
+write.csv(reads.all.tab, file.path(dir.tab, "Table2b_annotation_count_all_reads.csv"), row.names = FALSE)
+print(paste("Tables saved to", dir.tab, ": Table2a_annotation_count_unique_reads.csv, Table2b_annotation_count_all_reads.csv, Table2m_mature_miRNA_expression.csv, Table_unique_reads_annotation.csv, <sample>.unique_reads_annotation.csv"))

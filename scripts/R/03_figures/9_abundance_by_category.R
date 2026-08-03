@@ -1,6 +1,6 @@
 ##Date: 2026
 ##Author: Zhipeng
-## Step 9: abundance structure of the main (B: mature-miRNA within) annotation.
+## Step 9: abundance structure of the current strategy's annotation (out.dir).
 ## For each genome-feature category we compute the per-locus read abundance and
 ## describe how reads are distributed across loci:
 ##   matmiRNA : per mature miRNA locus (miRBase Name, up to 2110 loci)
@@ -15,7 +15,7 @@
 ##   3) Figure Abundance1: per-locus log10 read-distribution (violin + boxplot)
 ##   4) Figure Abundance2: rank-abundance (Whittaker) curves per category
 ##   5) Figure Abundance3: Lorenz curves (matmiRNA) -- skewness visualisation
-## Outputs are written to output_matmiRNA/tables and output_matmiRNA/figures.
+## Outputs are written to <out.dir>/tables and <out.dir>/figures (config/genome.R).
 
 library(ggplot2)
 library(scales)
@@ -117,7 +117,7 @@ plot.dt[, category := factor(category, levels = c("matmiRNA", "piRNA", "tRNA", "
 p1 = ggplot(plot.dt, aes(x = category, y = log10_reads, fill = sample)) +
   geom_violin(position = position_dodge(0.75), scale = "width", alpha = 0.7) +
   geom_boxplot(position = position_dodge(0.75), width = 0.15, outlier.size = 0.2) +
-  labs(title = "per-locus read abundance by annotation category (main strategy B)",
+  labs(title = "per-locus read abundance by annotation category (current strategy)",
        x = NULL, y = expression(log[10](reads + 1))) +
   scale_fill_manual(values = c(`Cumulus-cells` = "#e08214", `Granulosa-cells` = "#8073ac")) +
   theme_bw()
@@ -177,4 +177,4 @@ for(cat in c("matmiRNA", "piRNA", "tRNA", "snoRNA")){
         cat, s, r$n_loci, r$total_reads, r$gini, r$top1_pct, r$top5_pct, r$top10_pct, r$top_locus)
   }
 }
-out("Abundance analysis written to output_matmiRNA/tables/ and output_matmiRNA/figures/")
+out("Abundance analysis written to %s/tables/ and %s/figures/", dir.out, dir.out)
