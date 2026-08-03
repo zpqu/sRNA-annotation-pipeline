@@ -1,8 +1,8 @@
 ##Date: 2026
 ##Author: Zhipeng
-## Step 6 (comparison mode only): three-way comparison of SENSE OVERLAP RULES on
-## the SAME mature-miRNA (matmiRNA) feature set. The three strategies differ ONLY
-## in the sense overlap rule:
+## Step s01 (supplementary, comparison mode only): three-way comparison of SENSE
+## OVERLAP RULES on the SAME mature-miRNA (matmiRNA) feature set. The three
+## strategies differ ONLY in the sense overlap rule:
 ##   fully-contained : read fully contained in feature     -> <out.base>/fully_contained/
 ##   union            : read within feature OR feature within read -> <out.base>/union/
 ##   any              : any overlap (>= 1 bp)               -> <out.base>/any/
@@ -36,7 +36,7 @@ strategy.list = c("fully-contained" = "fully_contained",
 cols = c("fully-contained" = "#33a02c", "union" = "#1f78b4", "any" = "#e31a1c")
 for(st in strategy.list){
   if(!dir.exists(file.path(out.base, st)))
-    stop("strategy dir missing: ", file.path(out.base, st), " (run steps 2/3/4/5/9 for each strategy first)")
+    stop("strategy dir missing: ", file.path(out.base, st), " (run steps 02/03/04/05/06 for each strategy first)")
 }
 
 strategy.dir.of = function(st) file.path(out.base, strategy.list[[st]])
@@ -45,8 +45,8 @@ strategy.dir.of = function(st) file.path(out.base, strategy.list[[st]])
 d.all = data.table()
 for(st in names(strategy.list)){
   dir = strategy.dir.of(st)
-  t2a = read.csv(file.path(dir, "tables", "Table2a_annotation_count_unique_reads.csv"))
-  t2b = read.csv(file.path(dir, "tables", "Table2b_annotation_count_all_reads.csv"))
+  t2a = read.csv(file.path(dir, "tables", "Table_02a_annotation_count_unique_reads.csv"))
+  t2b = read.csv(file.path(dir, "tables", "Table_02b_annotation_count_all_reads.csv"))
   ra.u = as.data.table(t2a)[category == "read.annotation", .(sample, item, n_unique = Freq)]
   ra.a = as.data.table(t2b)[category == "read.annotation", .(sample, item, n_reads = Freq)]
   m = merge(ra.u, ra.a, by = c("sample", "item"))
@@ -63,7 +63,7 @@ d.all[, item := factor(item, levels = c("matmiRNA", "snoRNA", "piRNA", "tRNA", "
                                         "AS_matmiRNA", "AS_snoRNA", "AS_piRNA", "AS_tRNA",
                                         "AS_RM", "AS_gene.exon", "AS_gene.intron",
                                         "AS_lincRNA.exon", "other"))]
-write.csv(d.all[order(strategy, -pct_reads)], file.path(dir.tab, "Table4a_overlap_rule_composition.csv"), row.names = FALSE)
+write.csv(d.all[order(strategy, -pct_reads)], file.path(dir.tab, "Table_s01a_overlap_rule_composition.csv"), row.names = FALSE)
 
 p.comp = ggplot(d.all, aes(x = item, y = pct_reads, fill = strategy)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
@@ -73,22 +73,18 @@ p.comp = ggplot(d.all, aes(x = item, y = pct_reads, fill = strategy)) +
   scale_fill_manual(values = cols) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave(p.comp, file = file.path(dir.fig, "Comparison1_overlap_rules_composition.pdf"),
+ggsave(p.comp, file = file.path(dir.fig, "Figure_s01a_overlap_rules_composition.pdf"),
        width = 13, height = 6)
 
 ## ---- 2) per-category read-size distributions ----------------------------------------
 size.all = data.table()
 for(st in names(strategy.list)){
   dir = strategy.dir.of(st)
+  t2b = as.data.table(read.csv(file.path(dir, "tables", "Table_02b_annotation_count_all_reads.csv")))
   for(cat in c("matmiRNA", "snoRNA", "piRNA", "tRNA")){
-    f = list.files(file.path(dir, "tables"), pattern = paste0("cells.", cat, ".size.count.txt$"))
-    for(ff in f){
-      x = read.delim(file.path(dir, "tables", ff))
-      x$sample = sub(paste0(".", cat, ".size.count.txt"), "", ff)
-      x$cat = cat
-      x$strategy = st
-      size.all = rbind(size.all, as.data.table(x))
-    }
+    x = t2b[category == paste0(cat, ".size"), .(sample, cat, strategy = st,
+                                                Var1 = as.character(item), Freq)]
+    size.all = rbind(size.all, x)
   }
 }
 size.all[, pct := as.numeric(100*Freq/base::sum(Freq)), by = .(sample, cat, strategy)]
@@ -102,7 +98,7 @@ p.size = ggplot(size.all, aes(x = Var1, y = pct, fill = strategy)) +
   scale_fill_manual(values = cols) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave(p.size, file = file.path(dir.fig, "Comparison2_overlap_rules_category_size.pdf"),
+ggsave(p.size, file = file.path(dir.fig, "Figure_s01b_overlap_rules_category_size.pdf"),
        width = 12, height = 10)
 
 ## ---- 3) per-category totals + read-movement between strategies ----------------------
@@ -110,7 +106,7 @@ cat.tot = dcast(d.all, sample + item ~ strategy, value.var = "pct_reads", fill =
 cat.tot[, dany := `any` - `fully-contained`]
 cat.tot[, dunion := union - `fully-contained`]
 write.csv(cat.tot[order(sample, -`fully-contained`)],
-          file.path(dir.tab, "Table4b_overlap_rule_category_totals.csv"), row.names = FALSE)
+          file.path(dir.tab, "Table_s01b_overlap_rule_category_totals.csv"), row.names = FALSE)
 
 ## read-movement cross-tabulation (per read position: type in any vs type in fully-contained)
 mov.tab = data.table()
@@ -134,11 +130,11 @@ for(s in samples){
 ## aggregate read movement (all reads) between fully-contained and any
 mov.BA = mov.tab[, .(n_reads = base::sum(count)), by = .(typeB, typeA)]
 setorder(mov.BA, -n_reads)
-write.csv(mov.BA, file.path(dir.tab, "Table4c_read_movement_contained_vs_any.csv"), row.names = FALSE)
+write.csv(mov.BA, file.path(dir.tab, "Table_s01c_read_movement_contained_vs_any.csv"), row.names = FALSE)
 ## between fully-contained and union
 mov.BC = mov.tab[, .(n_reads = base::sum(count)), by = .(typeB, typeC)]
 setorder(mov.BC, -n_reads)
-write.csv(mov.BC, file.path(dir.tab, "Table4d_read_movement_contained_vs_union.csv"), row.names = FALSE)
+write.csv(mov.BC, file.path(dir.tab, "Table_s01d_read_movement_contained_vs_union.csv"), row.names = FALSE)
 
 out("== read movement fully-contained -> any [top transitions] ==")
 for(k in 1:min(10, nrow(mov.BA)))
@@ -173,7 +169,7 @@ for(st in names(strategy.list)){
   }
 }
 setorder(expr.tab, sample, strategy, -n_reads)
-write.csv(expr.tab, file.path(dir.tab, "Table4e_mature_miRNA_expression_strategies.csv"), row.names = FALSE)
+write.csv(expr.tab, file.path(dir.tab, "Table_s01e_mature_miRNA_expression_strategies.csv"), row.names = FALSE)
 for(s in unique(expr.tab$sample)){
   for(st in names(strategy.list)){
     top = expr.tab[sample == s & strategy == st][1:10]
@@ -194,8 +190,9 @@ for(s in unique(expr.tab$sample)){
 
 ## ---- 5) strand specificity for the "any" strategy -------------------------------------------
 for(s in samples){
-  ann = read.delim(file.path(strategy.dir.of("any"), "tables", paste0(s, ".read.annotation.count.txt")))
-  dt = as.data.table(ann)
+  t2b = as.data.table(read.csv(file.path(strategy.dir.of("any"), "tables",
+                                          "Table_02b_annotation_count_all_reads.csv")))
+  dt = t2b[category == "read.annotation" & sample == s, .(Var1 = as.character(item), Freq)]
   dt[, type2 := sub("^AS\\.", "", Var1)]
   dt[, str2 := ifelse(grepl("^AS\\.", Var1), "AS", "S")]
   w = dcast(dt, type2 ~ str2, value.var = "Freq", fun.aggregate = base::sum, fill = 0)

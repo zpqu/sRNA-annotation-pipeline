@@ -1,16 +1,16 @@
 ##Date: 21/07/2015
 ##Author: Zhipeng
 ## This script is used to make plots for small RNA annotation results (step 3).
-## It reads the two consolidated count tables produced by step 2 from the
+## It reads the two consolidated count tables produced by step 02 from the
 ## strategy output directory resolved by config/genome.R:
-##   Table2a_annotation_count_unique_reads.csv   (unique reads)
-##   Table2b_annotation_count_all_reads.csv      (all reads)
+##   Table_02a_annotation_count_unique_reads.csv   (unique reads)
+##   Table_02b_annotation_count_all_reads.csv      (all reads)
 ## For each class (read, matmiRNA, snoRNA, piRNA, tRNA) a count barplot (log10
 ## y-axis) and a percentage barplot are drawn as separate figures, using a 2D
 ## facet grid (samples on the y-axis rows, read flavor unique/all on the columns).
 ## Colour is used only to differentiate sense, antisense (AS.*) and
 ## other/intergenic categories.
-## Output figures follow the step naming rule: Figure3a, Figure3b, ...
+## Output figures follow the step naming rule: Figure_04a, Figure_04b, ...
 
 library(ggplot2)
 library(scales)
@@ -22,8 +22,8 @@ dir.fig = file.path(out.dir, "figures")
 dir.create(dir.fig, recursive = TRUE, showWarnings = FALSE)
 
 ###read consolidated count tables from step 2
-unique.tab = read.csv(file.path(dir.tab, "Table2a_annotation_count_unique_reads.csv"))
-all.tab = read.csv(file.path(dir.tab, "Table2b_annotation_count_all_reads.csv"))
+unique.tab = read.csv(file.path(dir.tab, "Table_02a_annotation_count_unique_reads.csv"))
+all.tab = read.csv(file.path(dir.tab, "Table_02b_annotation_count_all_reads.csv"))
 unique.tab$flavor = "unique reads"
 all.tab$flavor = "all reads"
 all.df = rbind(unique.tab, all.tab)
@@ -105,6 +105,6 @@ for(j in 1:length(class.list)){
             dev.off()
             print(paste("saved:", base, Sys.time()))
       }
-      save.plot(p.count, file.path(dir.fig, paste0("Figure3", letters[j], ".", class, "_annotation_count_barplot")))
-      save.plot(p.per, file.path(dir.fig, paste0("Figure3", letters[j], ".", class, "_annotation_percentage_barplot")))
+      save.plot(p.count, file.path(dir.fig, paste0("Figure_04", letters[j], ".", class, "_annotation_count_barplot")))
+      save.plot(p.per, file.path(dir.fig, paste0("Figure_04", letters[j], ".", class, "_annotation_percentage_barplot")))
 }

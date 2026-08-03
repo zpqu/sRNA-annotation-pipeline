@@ -1,7 +1,7 @@
 ##Date: 25/07/2015
 ##Author: Zhipeng
 ## This script makes plots for the position distribution of small RNA reads
-## with respect to tRNA and snoRNA genes (step 5).
+## with respect to tRNA and snoRNA genes (step 06).
 ## Features for the reference genome set in config/genome.R are used. Reads are
 ## taken from the step-2 annotated objects (rdata/*.bam.annotated.gr.RData in the
 ## strategy output directory), "AS.tRNA", "snoRNA", "AS.snoRNA", ...) and the
@@ -70,7 +70,7 @@ print(paste("snoRNA windows:", length(snoRNA.20bp.gr)))
 tRNA.dis.all.df = NULL
 snoRNA.dis.all.df = NULL
 files = list.files(path = dir.rdata, pattern = ".bam.annotated.gr.RData$")
-if(length(files) == 0) stop("no *.bam.annotated.gr.RData found in ", dir.rdata, " (run step 2 first)")
+if(length(files) == 0) stop("no *.bam.annotated.gr.RData found in ", dir.rdata, " (run step 02 first)")
 for(i in seq(along = files)){
       file.name = file.path(dir.rdata, files[i])
       sample.name = files[i]
@@ -147,5 +147,5 @@ position.plot = function(dis.all.df, fig.base){
       print(paste("saved:", fig.base, Sys.time()))
 }
 
-position.plot(tRNA.dis.all.df, file.path(dir.fig, "Fig2c.tRNA_pos_barplot"))
-position.plot(snoRNA.dis.all.df, file.path(dir.fig, "Fig2c.snoRNA_pos_barplot"))
+position.plot(tRNA.dis.all.df, file.path(dir.fig, "Figure_06.tRNA_pos_barplot"))
+position.plot(snoRNA.dis.all.df, file.path(dir.fig, "Figure_06.snoRNA_pos_barplot"))

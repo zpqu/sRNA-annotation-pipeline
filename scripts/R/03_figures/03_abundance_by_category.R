@@ -1,6 +1,6 @@
 ##Date: 2026
 ##Author: Zhipeng
-## Step 9: abundance structure of the current strategy's annotation (out.dir).
+## Step 03: abundance structure of the current strategy's annotation (out.dir).
 ## For each genome-feature category we compute the per-locus read abundance and
 ## describe how reads are distributed across loci:
 ##   matmiRNA : per mature miRNA locus (miRBase Name, up to 2110 loci)
@@ -9,13 +9,14 @@
 ##   piRNA    : per read position (chr:start:end:strand) -- the piRNA feature set
 ##              is ~83 M predicted features (mm39), so per-read loci are used instead
 ## Contents:
-##   1) Table5a: per-category summary statistics (n loci, reads, median/mean log10,
-##               Gini, top-1/5/10 % read shares, top locus, cross-sample tests)
-##   2) Table5b: long-format per-locus abundance (category, locus, reads) per sample
-##   3) Figure Abundance1: per-locus log10 read-distribution (violin + boxplot)
-##   4) Figure Abundance2: rank-abundance (Whittaker) curves per category
-##   5) Figure Abundance3: Lorenz curves (matmiRNA) -- skewness visualisation
+##   1) Table_03a: per-category summary statistics (n loci, reads, median/mean log10,
+##                 Gini, top-1/5/10 % read shares, top locus, cross-sample tests)
+##   2) Table_03b: long-format per-locus abundance (category, locus, reads) per sample
+##   3) Figure_03a: per-locus log10 read-distribution (violin + boxplot)
+##   4) Figure_03b: rank-abundance (Whittaker) curves per category
+##   5) Figure_03c: Lorenz curves (matmiRNA) -- skewness visualisation
 ## Outputs are written to <out.dir>/tables and <out.dir>/figures (config/genome.R).
+## All three figures use facet_wrap(~sample) so each sample is shown in its own panel.
 
 library(ggplot2)
 library(scales)
@@ -65,7 +66,7 @@ gini = function(x){
   (2*base::sum(seq_len(n)*x))/(n*base::sum(x)) - (n + 1)/n
 }
 
-## ---- Table5a: summary statistics + cross-sample tests ---------------------------------
+## ---- Table_03a: summary statistics + cross-sample tests ---------------------------------
 sum.tab = data.table()
 for(cat in c("matmiRNA", "snoRNA", "tRNA", "piRNA")){
   sub = locus.tab[category == cat]
@@ -95,13 +96,13 @@ for(cat in c("matmiRNA", "snoRNA", "tRNA", "piRNA")){
       wilcoxon_p_cumulus_vs_granulosa = format.pval(w$p.value, digits = 3)))
   }
 }
-write.csv(sum.tab, paste0(dir.out, "/tables/Table5a_category_abundance_summary.csv"), row.names = FALSE)
-out("== Table5a: per-category abundance summary ==")
+write.csv(sum.tab, paste0(dir.out, "/tables/Table_03a_category_abundance_summary.csv"), row.names = FALSE)
+out("== Table_03a: per-category abundance summary ==")
 print(sum.tab, row.names = FALSE)
 
-## ---- Table5b: long-format per-locus abundance ------------------------------------------
+## ---- Table_03b: long-format per-locus abundance ------------------------------------------
 write.csv(locus.tab[order(category, sample, -n_reads)],
-          paste0(dir.out, "/tables/Table5b_per_locus_abundance.csv"), row.names = FALSE)
+          paste0(dir.out, "/tables/Table_03b_per_locus_abundance.csv"), row.names = FALSE)
 
 ## ---- Kruskal-Wallis across categories (per sample; descriptive, units differ) -----------
 for(s in samples){
@@ -114,15 +115,17 @@ for(s in samples){
 ## ---- Figure 1: per-locus log10 read distribution ----------------------------------------
 plot.dt = locus.tab[, log10_reads := log10(n_reads + 1)]
 plot.dt[, category := factor(category, levels = c("matmiRNA", "piRNA", "tRNA", "snoRNA"))]
-p1 = ggplot(plot.dt, aes(x = category, y = log10_reads, fill = sample)) +
-  geom_violin(position = position_dodge(0.75), scale = "width", alpha = 0.7) +
-  geom_boxplot(position = position_dodge(0.75), width = 0.15, outlier.size = 0.2) +
+cat.cols = c(matmiRNA = "#1f78b4", piRNA = "#33a02c", tRNA = "#e31a1c", snoRNA = "#ff7f00")
+p1 = ggplot(plot.dt, aes(x = category, y = log10_reads, fill = category)) +
+  geom_violin(scale = "width", alpha = 0.7) +
+  geom_boxplot(width = 0.15, outlier.size = 0.2) +
+  facet_wrap(~sample, ncol = 2) +
   labs(title = "per-locus read abundance by annotation category (current strategy)",
        x = NULL, y = expression(log[10](reads + 1))) +
-  scale_fill_manual(values = c(`Cumulus-cells` = "#e08214", `Granulosa-cells` = "#8073ac")) +
+  scale_fill_manual(values = cat.cols) +
   theme_bw()
-ggsave(p1, file = paste0(dir.out, "/figures/Abundance1_per_locus_distribution.pdf"),
-       width = 7, height = 5)
+ggsave(p1, file = paste0(dir.out, "/figures/Figure_03a_per_locus_distribution.pdf"),
+       width = 8, height = 5)
 
 ## ---- Figure 2: rank-abundance (Whittaker) curves ------------------------------------------
 ra = locus.tab[, .(n_reads = base::sum(n_reads)), by = .(sample, category, locus)]
@@ -130,16 +133,16 @@ ra[, rank := frank(-n_reads, ties.method = "first"), by = .(sample, category)]
 ra[, n_loci := .N, by = .(sample, category)]
 ra[, rank := rank + rnorm(.N, 0, 0.08)]  ## jitter ties
 ra[, category := factor(category, levels = c("matmiRNA", "piRNA", "tRNA", "snoRNA"))]
-p2 = ggplot(ra, aes(x = rank, y = n_reads, color = sample)) +
+p2 = ggplot(ra, aes(x = rank, y = n_reads, color = category)) +
   geom_line(linewidth = 0.4, alpha = 0.8) +
   scale_x_log10(labels = comma) +
   scale_y_log10(labels = comma) +
-  facet_wrap(~ category, scales = "free_x", nrow = 1) +
+  facet_wrap(~sample, scales = "free_x", ncol = 2) +
   labs(title = "rank-abundance curves per annotation category",
        x = "rank of locus (log10)", y = "reads (log10)") +
-  scale_color_manual(values = c(`Cumulus-cells` = "#e08214", `Granulosa-cells` = "#8073ac")) +
+  scale_color_manual(values = cat.cols) +
   theme_bw()
-ggsave(p2, file = paste0(dir.out, "/figures/Abundance2_rank_abundance.pdf"),
+ggsave(p2, file = paste0(dir.out, "/figures/Figure_03b_rank_abundance.pdf"),
        width = 10, height = 4.5)
 
 ## ---- Figure 3: Lorenz curves for matmiRNA ------------------------------------------------
@@ -156,16 +159,16 @@ for(s in samples){
   lz = rbind(lz, data.table(sample = s, i = c(0, seq_len(n))/n,
                             cum_share = c(0, cumsum(x)/base::sum(x))))
 }
-p3 = ggplot(lz, aes(i, cum_share, color = sample)) +
+p3 = ggplot(lz, aes(i, cum_share)) +
   geom_abline(slope = 1, intercept = 0, linetype = 2) +
-  geom_line(linewidth = 0.6) +
+  geom_line(color = "steelblue", linewidth = 0.6) +
   coord_equal() +
+  facet_wrap(~sample, ncol = 2) +
   labs(title = "Lorenz curves - mature miRNA loci (the more bowed, the more skewed)",
        x = "cumulative fraction of loci", y = "cumulative fraction of reads") +
-  scale_color_manual(values = c(`Cumulus-cells` = "#e08214", `Granulosa-cells` = "#8073ac")) +
   theme_bw()
-ggsave(p3, file = paste0(dir.out, "/figures/Abundance3_lorenz_matmiRNA.pdf"),
-       width = 5.5, height = 5.5)
+ggsave(p3, file = paste0(dir.out, "/figures/Figure_03c_lorenz_matmiRNA.pdf"),
+       width = 8, height = 4)
 
 ## ---- console summary ----------------------------------------------------------------------
 out("== per-category dominance (all reads, both samples) ==")
