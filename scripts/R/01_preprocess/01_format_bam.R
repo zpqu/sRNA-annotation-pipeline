@@ -113,8 +113,9 @@ for(i in seq(along = files)){
 
   ## ---- density data (subsampled, one entry per unique read) ----------------------
   set.seed(123)
+  n.plot = nrow(plot.dt)
   dens.list[[i]] = data.table(sample = sample.label,
-                              lc = log2(plot.dt$count[sample(.N, min(.N, 1e6))]))
+                              lc = log2(plot.dt$count[base::sample(n.plot, min(n.plot, 1e6))]))
 
   rm(reads.bam.gr, reads.bam.unique.gr, plot.dt, size.dt, cdist.dt, bin.dt)
   gc()

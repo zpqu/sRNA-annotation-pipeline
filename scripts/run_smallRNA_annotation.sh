@@ -5,8 +5,8 @@
 ##   GENOME   reference genome assembly, default mm39 (also SMALLRNA_GENOME).
 ##            The feature DB for the genome is auto-detected
 ##            (DB/rdata_<GENOME>/ with the 24 feature objects) and, if missing
-##            or incomplete, rebuilt automatically via step 0
-##            (scripts/R/00_build_DB/0_build_annotation_DB.R). Set
+##            or incomplete, rebuilt automatically via step 00
+##            (scripts/R/00_build_DB/00_build_annotation_DB.R). Set
 ##            SMALLRNA_FORCE_REBUILD_DB=1 to force a rebuild of an existing DB
 ##            (e.g. after changing the DB build script).
 ##   STRATEGY sense-annotation rule:
@@ -14,13 +14,14 @@
 ##              union                     read within feature OR feature within read
 ##              any                       any overlap (>= 1 bp) between read and feature
 ##              comparison                runs fully-contained, union and any (each
-##                                        through steps 2/3/4/5/9) and then performs
-##                                        the overlap-rule comparison (step 6) and the
-##                                        end-of-pipeline summary (step 10)
+##                                        through steps 02/03/04/05/06) and then
+##                                        performs the overlap-rule comparison
+##                                        (step s01) and the end-of-pipeline
+##                                        summary (step 10)
 ##
 ## Output layout (config/genome.R):
 ##   single strategy -> output/          (tables/figures/rdata)
-##   comparison      -> output/comparison/  (shared step-1 at the root, one
+##   comparison      -> output/comparison/  (shared step-01 at the root, one
 ##                                           subfolder per strategy + comparison
 ##                                           analysis and summary at the root)
 
@@ -36,19 +37,19 @@ Arguments:
   GENOME   reference genome assembly, default mm39 (also SMALLRNA_GENOME).
            The feature DB for the genome is auto-detected (DB/rdata_<GENOME>/
            with the 24 feature objects) and, if missing or incomplete, rebuilt
-           automatically via step 0 (scripts/R/00_build_DB/0_build_annotation_DB.R).
+           automatically via step 00 (scripts/R/00_build_DB/00_build_annotation_DB.R).
   STRATEGY sense-annotation rule (also SMALLRNA_STRATEGY):
              fully-contained  (default) read fully contained in the feature
              union                     read within feature OR feature within read
              any                       any overlap (>= 1 bp) between read and feature
              comparison                runs fully-contained, union and any (each
-                                       through steps 2/3/4/5/9), then the
-                                       overlap-rule comparison (step 6) and the
+                                       through steps 02/03/04/05/06), then the
+                                       overlap-rule comparison (step s01) and the
                                        end-of-pipeline summary (step 10)
 
 Output layout (config/genome.R):
   single strategy -> output/            (tables/figures/rdata)
-  comparison      -> output/comparison/ (shared step-1 at the root, one subfolder
+  comparison      -> output/comparison/ (shared step-01 at the root, one subfolder
                                          per strategy (fully_contained/, union/,
                                          any/) plus the comparison analysis and
                                          summary at the root)
@@ -105,7 +106,7 @@ run_R() {
 }
 
 ## feature DB: auto-detect (DB/rdata_<GENOME>/ with >= 24 feature objects) and,
-## if missing or incomplete, rebuild it via step 0 (logs to logs/step0.log).
+## if missing or incomplete, rebuild it via step 00 (logs to logs/step00.log).
 DB_DIR="../DB/rdata_${GENOME}"
 DB_ORIG="../DB/original_data_${GENOME}"
 DB_N_OBJECTS=24
@@ -124,46 +125,44 @@ if [ "${SMALLRNA_FORCE_REBUILD_DB:-0}" = "1" ] || ! db_built; then
         exit 1
     fi
     echo "Building feature DB for $GENOME ..."
-    run_R R/00_build_DB 0_build_annotation_DB.R step0.log
+    run_R R/00_build_DB 00_build_annotation_DB.R step00.log
     if ! db_built; then
-        echo "ERROR: feature DB build failed for $GENOME (see logs/step0.log)"
+        echo "ERROR: feature DB build failed for $GENOME (see logs/step00.log)"
         exit 1
     fi
     echo "Feature DB for $GENOME is ready."
 fi
 
 if [ "$STRATEGY" == "comparison" ]; then
-    ## step 1: shared pre-processing (runs once)
-    run_R R/01_preprocess 1_format_bam.R step1.log
+    ## step 01: shared pre-processing (runs once)
+    run_R R/01_preprocess 01_format_bam.R step01.log
 
-    ## steps 2/3/4/5/9 for each strategy
+    ## steps 02/03/04/05/06 for each strategy
     for SUB in fully-contained union any; do
         export SMALLRNA_SUBSTRATEGY=$SUB
         echo "===== strategy: $SUB ====="
-        run_R R/02_annotation 2_annotation_smallRNA.R "step2_${SUB}.log"
-        run_R R/03_figures 3_figure_annotation.R "step3_${SUB}.log"
-        run_R R/03_figures 4_figure_size.R "step4_${SUB}.log"
-        run_R R/03_figures 5_tRNA_snoRNA_position.windows.R "step5_${SUB}.log"
-        run_R R/03_figures 9_abundance_by_category.R "step9_${SUB}.log"
+        run_R R/02_annotation 02_annotation_smallRNA.R "step02_${SUB}.log"
+        run_R R/03_figures 03_abundance_by_category.R "step03_${SUB}.log"
+        run_R R/03_figures 04_figure_annotation.R "step04_${SUB}.log"
+        run_R R/03_figures 05_figure_size.R "step05_${SUB}.log"
+        run_R R/03_figures 06_tRNA_snoRNA_position.windows.R "step06_${SUB}.log"
     done
     unset SMALLRNA_SUBSTRATEGY
 
-    ## step 6: overlap-rule comparison analysis
-    run_R R/03_figures 6_compare_overlap_rules.R step6.log
+    ## step s01: overlap-rule comparison analysis
+    run_R R/03_figures s01_compare_overlap_rules.R steps01.log
 else
-    ## step 1
-    run_R R/01_preprocess 1_format_bam.R step1.log
+    ## step 01
+    run_R R/01_preprocess 01_format_bam.R step01.log
 
-    ## step 2
-    run_R R/02_annotation 2_annotation_smallRNA.R step2.log
+    ## step 02
+    run_R R/02_annotation 02_annotation_smallRNA.R step02.log
 
-    ## steps 3/4/5
-    run_R R/03_figures 3_figure_annotation.R step3.log
-    run_R R/03_figures 4_figure_size.R step4.log
-    run_R R/03_figures 5_tRNA_snoRNA_position.windows.R step5.log
-
-    ## step 9
-    run_R R/03_figures 9_abundance_by_category.R step9.log
+    ## steps 03/04/05/06
+    run_R R/03_figures 03_abundance_by_category.R step03.log
+    run_R R/03_figures 04_figure_annotation.R step04.log
+    run_R R/03_figures 05_figure_size.R step05.log
+    run_R R/03_figures 06_tRNA_snoRNA_position.windows.R step06.log
 fi
 
 ## step 10: end-of-pipeline summary

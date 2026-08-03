@@ -9,7 +9,7 @@
 ##
 ##   genome  : assembly ID used to locate the feature DB and raw files
 ##             (e.g. "mm39", "hg38"). The feature DB must have been built
-##             into DB/rdata_<genome>/ by scripts/R/00_build_DB/0_build_annotation_DB.R.
+##             into DB/rdata_<genome>/ by scripts/R/00_build_DB/00_build_annotation_DB.R.
 ##   strategy: sense-annotation rule for the small-RNA annotation step.
 ##             One of
 ##               "fully-contained"  (default) read fully contained in the feature
@@ -22,7 +22,7 @@
 ##             strategy currently being executed).
 ##
 ##   samples : sample labels, in order, used by the figure scripts.
-##             The annotation steps (1-2) detect samples from the BAM/RData
+##             The annotation steps (01-02) detect samples from the BAM/RData
 ##             file names automatically; only the figure/comparison scripts
 ##             use this list.
 ##

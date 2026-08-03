@@ -31,10 +31,10 @@ building a feature database from six raw feature files.
 ├── scripts/
 │   ├── run_smallRNA_annotation.sh   # pipeline runner (the entry point)
 │   ├── R/
-│   │   ├── 00_build_DB/     # step 0: build the feature DB from raw files
-│   │   ├── 01_preprocess/   # step 1: format BAMs -> reads GRanges + counts
-│   │   ├── 02_annotation/   # step 2: annotate reads (main analysis)
-│   │   ├── 03_figures/      # steps 3-6, 9: figures + comparison analysis
+│   │   ├── 00_build_DB/     # step 00: build the feature DB from raw files
+│   │   ├── 01_preprocess/   # step 01: format BAMs -> reads GRanges + counts
+│   │   ├── 02_annotation/   # step 02: annotate reads (main analysis)
+│   │   ├── 03_figures/      # steps 03-06, s01: figures + comparison analysis
 │   │   └── 04_summary/      # step 10: pipeline summary + sanity checks
 ├── bams/                    # input: aligned BAM files (gitignored)
 ├── DB/                      # feature DB (built, gitignored)
@@ -72,7 +72,7 @@ building a feature database from six raw feature files.
    | `piRNAdb.gtf` | piRNAdb       | piRNA clusters                       |
 
    The runner detects whether `DB/rdata_<genome>/` already holds the 24 feature
-   objects and builds it via step 0 automatically if not.
+   objects and builds it via step 00 automatically if not.
 
 ## Usage
 
@@ -123,27 +123,26 @@ writes shared step-1 results to `output/comparison/` and per-strategy subfolders
 
 | Step | Script | What it does |
 |---|---|---|
-| 0 | `00_build_DB/0_build_annotation_DB.R` | Builds the 24 feature GRanges objects from the six raw files into `DB/rdata_<genome>/`. |
-| 1 | `01_preprocess/1_format_bam.R` | Formats BAMs into per-read GRanges, computes unique reads and counts (`Table1a–d`, `Figure1`). |
-| 2 | `02_annotation/2_annotation_smallRNA.R` | Annotates each read to a single feature class, sense/antisense; count matrices + per-read CSV (`Table2a/b`, `Table2m`). |
-| 3 | `03_figures/3_figure_annotation.R` | Annotation-composition barplots (`Figure3a–e`). |
-| 4 | `03_figures/4_figure_size.R` | Read-size distributions (`Fig2a/b`). |
-| 5 | `03_figures/5_tRNA_snoRNA_position.windows.R` | Positional profiles over tRNA/snoRNA genes (`Fig2c`). |
-| 6 | `03_figures/6_compare_overlap_rules.R` | (Comparison mode only) quantifies how the three rules differ (`Table4a–e`, `Comparison*`). |
-| 9 | `03_figures/9_abundance_by_category.R` | Abundance/per-locus analyses for mature miRNAs (`Table5a/b`, `Abundance1–3`). |
-| 10 | `04_summary/10_pipeline_summary.R` | Writes `pipeline_summary.md` and runs automated sanity checks (`Table6`). |
+| 00 | `00_build_DB/00_build_annotation_DB.R` | Builds the 24 feature GRanges objects from the six raw files into `DB/rdata_<genome>/`. |
+| 01 | `01_preprocess/01_format_bam.R` | Formats BAMs into per-read GRanges, computes unique reads and counts (`Table_01a–d`, `Figure_01`). |
+| 02 | `02_annotation/02_annotation_smallRNA.R` | Annotates each read to a single feature class, sense/antisense; count matrices + per-read CSV (`Table_02a/b`, `Table_02m`, `Table_02_<sample>_unique_reads_annotation.csv`). |
+| 03 | `03_figures/03_abundance_by_category.R` | Abundance/per-locus analyses for mature miRNAs (`Table_03a/b`, `Figure_03a–c`). |
+| 04 | `03_figures/04_figure_annotation.R` | Annotation-composition barplots (`Figure_04a–e`). |
+| 05 | `03_figures/05_figure_size.R` | Read-size distributions (`Figure_05a/b`). |
+| 06 | `03_figures/06_tRNA_snoRNA_position.windows.R` | Positional profiles over tRNA/snoRNA genes (`Figure_06`). |
+| s01 | `03_figures/s01_compare_overlap_rules.R` | (Comparison mode only) quantifies how the three rules differ (`Table_s01a–e`, `Figure_s01a/b`). |
+| 10 | `04_summary/10_pipeline_summary.R` | Writes `pipeline_summary.md` and runs automated sanity checks (`Table_10`). |
 
 ## Outputs
 
 Everything is written below `output/` (or `output/comparison/`), organised into
 `tables/`, `figures/` and `rdata/`:
 
-- `tables/` — per-sample count matrices (`*.annotation.count.txt`,
-  `*.size.count.txt`), per-read annotation CSV (`*.unique_reads_annotation.csv`),
-  and the cross-sample tables `Table1a–d`, `Table2a/b`, `Table2m`, `Table4a–e`,
-  `Table5a/b`, `Table6`.
-- `figures/` — PDF/PNG figures (`Figure1`, `Fig2a/b/c`, `Figure3a–e`,
-  `Comparison1/2`, `Abundance1–3`).
+- `tables/` — cross-sample count matrices (`Table_01a–d`, `Table_02a/b`,
+  `Table_02m`, `Table_03a/b`, `Table_s01a–e`, `Table_10`), per-sample
+  annotation tables (`Table_02_<sample>_unique_reads_annotation.csv`).
+- `figures/` — PDF/PNG figures (`Figure_01`, `Figure_03a–c`, `Figure_04a–e`,
+  `Figure_05a/b`, `Figure_06`, `Figure_s01a/b`).
 - `rdata/` — intermediate R objects (reads GRanges, annotation results,
   position-window counts) for downstream analysis.
 - `pipeline_summary.md` — end-of-pipeline report: run parameters, inventory of
