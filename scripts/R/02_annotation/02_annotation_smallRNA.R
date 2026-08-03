@@ -3,7 +3,7 @@
 ## Step 2: small-RNA annotation, mature-miRNA strategy, parameterised by the
 ## sense-annotation rule. The miRNA category is annotated with MATURE miRNA
 ## loci (matmiRNA.gr, miRBase v22, ~22 nt). The sense rule is controlled by
-## config/genome.R (SMALLRNA_STRATEGY / SMALLRNA_SUBSTRATEGY):
+## config/bootstrap (init.R: SMALLRNA_STRATEGY / SMALLRNA_SUBSTRATEGY):
 ##   fully-contained : a read is annotated to a feature only if the read is
 ##                      fully contained in the feature (findOverlaps type="within")
 ##   union           : read within feature OR feature within read (union
@@ -13,9 +13,9 @@
 ## Priority: matmiRNA>snoRNA>piRNA>tRNA>RM>refGene_NM_exon>refGene_NM_intron>lincRNA
 ## >antisense_tRNA>antisense_RM>antisense_NM_exon>antisense_NM_intron>antisense_lincRNA
 ## Reads are annotated as non-redundant unique reads (chr/start/end/strand).
-## Outputs are written to the directory resolved by config/genome.R
-## (output/ for a single-strategy run; output/comparison/<strategy>/ inside a
-## comparison run):
+## Outputs are written to the directory resolved by the shared bootstrap
+## (scripts/R/lib/init.R; output/ for a single-strategy run,
+## output/comparison/<strategy>/ inside a comparison run):
 ##   tables/Table_02a_annotation_count_unique_reads.csv
 ##   tables/Table_02b_annotation_count_all_reads.csv
 ##   tables/Table_02m_mature_miRNA_expression.csv  (top expressed mature miRNAs)
@@ -26,7 +26,7 @@ library(GenomicFeatures)
 library(data.table)
 rm(list = ls())
 
-source("../../../config/genome.R")
+source("../lib/init.R")
 sense.rule <- if (cur.strategy == "union") "union" else if (cur.strategy == "any") "any" else "within"
 dir.tab  <- file.path(out.dir, "tables")
 dir.rdata <- file.path(out.dir, "rdata")

@@ -19,7 +19,7 @@
 ##                                        (step s01) and the end-of-pipeline
 ##                                        summary (step 10)
 ##
-## Output layout (config/genome.R):
+## Output layout (see scripts/R/lib/init.R):
 ##   single strategy -> output/          (tables/figures/rdata)
 ##   comparison      -> output/comparison/  (shared step-01 at the root, one
 ##                                           subfolder per strategy + comparison
@@ -47,7 +47,7 @@ Arguments:
                                        overlap-rule comparison (step s01) and the
                                        end-of-pipeline summary (step 10)
 
-Output layout (config/genome.R):
+Output layout (see scripts/R/lib/init.R):
   single strategy -> output/            (tables/figures/rdata)
   comparison      -> output/comparison/ (shared step-01 at the root, one subfolder
                                          per strategy (fully_contained/, union/,

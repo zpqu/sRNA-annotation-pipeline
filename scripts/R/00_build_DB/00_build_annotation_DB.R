@@ -1,6 +1,6 @@
 ##Author: Zhipeng
 ## This script rebuilds the small-RNA annotation genomic-feature DB for the
-## reference genome selected in config/genome.R (assembly ID `genome`, e.g.
+## reference genome selected via the environment (assembly ID `genome`, e.g.
 ## "mm39" or "hg38"). Raw annotation files are read from
 ## DB/original_data_<genome>/ (refGene.gtf, miRNA.gff3, tRNAs.bed, RM.bed,
 ## piRBase.bed, piRNAdb.gtf) and one .RData per feature object is written to
@@ -20,7 +20,7 @@ suppressMessages({
   library(data.table)
 })
 
-source("../../../config/genome.R")
+source("../lib/init.R")
 in.dir  <- orig.dir
 out.dir <- db.dir
 stopifnot(dir.exists(in.dir))

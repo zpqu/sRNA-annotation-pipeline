@@ -15,7 +15,7 @@
 ##   3) Figure_03a: per-locus log10 read-distribution (violin + boxplot)
 ##   4) Figure_03b: rank-abundance (Whittaker) curves per category
 ##   5) Figure_03c: Lorenz curves (matmiRNA) -- skewness visualisation
-## Outputs are written to <out.dir>/tables and <out.dir>/figures (config/genome.R).
+## Outputs are written to <out.dir>/tables and <out.dir>/figures (init.R).
 ## All three figures use facet_wrap(~sample) so each sample is shown in its own panel.
 
 library(ggplot2)
@@ -25,7 +25,7 @@ library(GenomicRanges)
 
 out = function(...) cat(sprintf(...), "\n")
 
-source("../../../config/genome.R")
+source("../lib/init.R")
 dir.out = out.dir
 dir.create(file.path(dir.out, "tables"), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(dir.out, "figures"), recursive = TRUE, showWarnings = FALSE)
@@ -72,12 +72,17 @@ gini = function(x){
 sum.tab = data.table()
 for(cat in c("matmiRNA", "snoRNA", "tRNA", "piRNA")){
   sub = locus.tab[category == cat]
-  ## cross-sample statistics on loci present in both samples
-  cs = dcast(sub, locus ~ sample, value.var = "n_reads", fill = 0)
-  setnames(cs, samples, c("v1", "v2"))
-  cs[, v1 := log10(v1 + 1)][, v2 := log10(v2 + 1)]
-  rho = suppressWarnings(cor(cs$v1, cs$v2, method = "spearman"))
-  w = suppressWarnings(wilcox.test(cs$v1, cs$v2, paired = TRUE))
+  ## cross-sample statistics on loci present in both samples (paired Spearman /
+  ## Wilcoxon are only defined for exactly two samples; otherwise left NA)
+  rho = NA_real_
+  w = NULL
+  if (length(samples) == 2){
+    cs = dcast(sub, locus ~ sample, value.var = "n_reads", fill = 0)
+    setnames(cs, samples, c("v1", "v2"))
+    cs[, v1 := log10(v1 + 1)][, v2 := log10(v2 + 1)]
+    rho = suppressWarnings(cor(cs$v1, cs$v2, method = "spearman"))
+    w = suppressWarnings(wilcox.test(cs$v1, cs$v2, paired = TRUE))
+  }
   for(s in samples){
     x = sub[sample == s]
     if(nrow(x) == 0) next
@@ -94,8 +99,8 @@ for(cat in c("matmiRNA", "snoRNA", "tRNA", "piRNA")){
       top5_pct = round(100*base::sum(x$n_reads[1:min(5, nrow(x))])/tot, 2),
       top10_pct = round(100*base::sum(x$n_reads[1:min(10, nrow(x))])/tot, 2),
       top_locus = x$locus[1],
-      spearman_cross_sample = round(rho, 3),
-      wilcoxon_p_cumulus_vs_granulosa = format.pval(w$p.value, digits = 3)))
+      spearman_cross_sample = if (length(samples) == 2) round(rho, 3) else NA_real_,
+      wilcoxon_p_2sample = if (length(samples) == 2) format.pval(w$p.value, digits = 3) else NA_character_))
   }
 }
 write.csv(sum.tab, paste0(dir.out, "/tables/Table_03a_category_abundance_summary.csv"), row.names = FALSE)

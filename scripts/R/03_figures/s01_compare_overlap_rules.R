@@ -13,7 +13,7 @@
 ##   4) mature-miRNA-focused: top identities, 5p/3p, sizes, union/any-added reads
 ##   5) strand specificity for the "any" strategy
 ## Outputs are written to <out.base>/tables and <out.base>/figures, where out.base
-## is output/comparison (config/genome.R).
+## is output/comparison (see scripts/R/lib/init.R).
 
 library(ggplot2)
 library(scales)
@@ -22,7 +22,7 @@ library(GenomicRanges)
 
 out = function(...) cat(sprintf(...), "\n")
 
-source("../../../config/genome.R")
+source("../lib/init.R")
 stopifnot(is.comparison)
 
 dir.tab = file.path(out.base, "tables")

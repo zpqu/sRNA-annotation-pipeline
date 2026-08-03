@@ -2,7 +2,7 @@
 ##Author: Zhipeng
 ## This script is used to make plot for size distribution for all small RNA data.
 ## Reads the consolidated all-reads count table Table_02b from the strategy
-## output directory resolved by config/genome.R (step 2) and plots, for each
+## output directory resolved by the shared bootstrap (init.R) and plots, for each
 ## annotation class, the read-size distribution (faceted by sample).
 ##
 ## Outputs (step 05):
@@ -13,7 +13,7 @@ library(ggplot2)
 library(scales)
 rm(list = ls())
 
-source("../../../config/genome.R")
+source("../lib/init.R")
 dir.tab = file.path(out.dir, "tables")
 dir.fig = file.path(out.dir, "figures")
 dir.create(dir.fig, recursive = TRUE, showWarnings = FALSE)

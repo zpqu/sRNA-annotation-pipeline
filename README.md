@@ -8,8 +8,9 @@ matrices, per-read tables, publication-style figures and an end-of-pipeline
 report with built-in sanity checks.
 
 The pipeline is genome-agnostic: the reference assembly and the annotation
-strategy are defined in one configuration file, and any assembly can be added by
-building a feature database from six raw feature files.
+strategy are set via the runner arguments (or environment variables), sample
+labels are auto-detected from the BAM files in `bams/`, and any assembly can be
+added by building a feature database from six raw feature files.
 
 ## Features
 
@@ -27,15 +28,16 @@ building a feature database from six raw feature files.
 
 ```
 .
-├── config/genome.R          # single source of truth: genome, strategy, samples
 ├── scripts/
 │   ├── run_smallRNA_annotation.sh   # pipeline runner (the entry point)
-│   ├── R/
-│   │   ├── 00_build_DB/     # step 00: build the feature DB from raw files
-│   │   ├── 01_preprocess/   # step 01: format BAMs -> reads GRanges + counts
-│   │   ├── 02_annotation/   # step 02: annotate reads (main analysis)
-│   │   ├── 03_figures/      # steps 03-06, s01: figures + comparison analysis
-│   │   └── 04_summary/      # step 10: pipeline summary + sanity checks
+│   └── R/
+│       ├── lib/             # shared bootstrap (init.R): env-driven settings,
+│       │                    #   path layout, sample auto-detection
+│       ├── 00_build_DB/     # step 00: build the feature DB from raw files
+│       ├── 01_preprocess/   # step 01: format BAMs -> reads GRanges + counts
+│       ├── 02_annotation/   # step 02: annotate reads (main analysis)
+│       ├── 03_figures/      # steps 03-06, s01: figures + comparison analysis
+│       └── 04_summary/      # step 10: pipeline summary + sanity checks
 ├── bams/                    # input: aligned BAM files (gitignored)
 ├── DB/                      # feature DB (built, gitignored)
 └── output/                  # results (gitignored)
@@ -150,12 +152,20 @@ Everything is written below `output/` (or `output/comparison/`), organised into
 
 ## Configuration
 
-All run-level settings live in `config/genome.R`:
+There is no configuration file to edit. All run-level settings come from the
+runner arguments or environment variables, which the shared bootstrap
+(`scripts/R/lib/init.R`) reads:
 
-- `genome` — assembly ID (`mm39` default; overridable via `SMALLRNA_GENOME`).
-- `strategy` — default annotation rule (overridable via `SMALLRNA_STRATEGY`).
-- `samples` — sample labels in display order for the figure scripts.
-- `chr.style` — chromosome naming convention (`"chr"`), enforced on the DB build.
+| Variable | Default | Purpose |
+|---|---|---|
+| `SMALLRNA_GENOME` | `mm39` | Assembly ID (same as the runner's `GENOME` argument). |
+| `SMALLRNA_STRATEGY` | `fully-contained` | Annotation rule (same as the runner's `STRATEGY` argument). |
+| `SMALLRNA_CHR_STYLE` | `chr` | Chromosome naming convention enforced on the DB build. |
+| `SMALLRNA_SUBSTRATEGY` | — | Set by the runner inside comparison mode — do not set manually. |
+
+Sample labels are **auto-detected** from `bams/*.bam` (the `.bam` extension and a
+trailing `.bwa`/`.bowtie2` aligner tag are stripped) and sorted for a
+deterministic display order across the figure scripts.
 
 ## License
 

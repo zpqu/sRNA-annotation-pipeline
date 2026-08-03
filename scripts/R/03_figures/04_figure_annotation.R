@@ -2,7 +2,7 @@
 ##Author: Zhipeng
 ## This script is used to make plots for small RNA annotation results (step 3).
 ## It reads the two consolidated count tables produced by step 02 from the
-## strategy output directory resolved by config/genome.R:
+## strategy output directory resolved by the shared bootstrap (init.R):
 ##   Table_02a_annotation_count_unique_reads.csv   (unique reads)
 ##   Table_02b_annotation_count_all_reads.csv      (all reads)
 ## For each class (read, matmiRNA, snoRNA, piRNA, tRNA) a count barplot (log10
@@ -16,7 +16,7 @@ library(ggplot2)
 library(scales)
 rm(list = ls())
 
-source("../../../config/genome.R")
+source("../lib/init.R")
 dir.tab = file.path(out.dir, "tables")
 dir.fig = file.path(out.dir, "figures")
 dir.create(dir.fig, recursive = TRUE, showWarnings = FALSE)

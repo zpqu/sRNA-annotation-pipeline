@@ -27,7 +27,7 @@ library(scales)
 library(patchwork)
 rm(list = ls())
 
-source("../../../config/genome.R")
+source("../lib/init.R")
 dir.rdata = file.path(out.base, "rdata")
 dir.fig = file.path(out.base, "figures")
 dir.tab = file.path(out.base, "tables")

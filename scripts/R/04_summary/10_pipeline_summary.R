@@ -22,7 +22,7 @@
 
 suppressMessages({library(data.table); library(GenomicRanges)})
 
-source("../../../config/genome.R")
+source("../lib/init.R")
 
 ## -----------------------------------------------------------------------------
 ## small helpers
@@ -146,8 +146,8 @@ if (is.comparison && length(active.strats) < length(strat.names))
       paste(setdiff(strat.names, active.strats), collapse = ", "))
 
 rep("### Ancillary inputs\n")
-rep("- `config/genome.R` - single source of truth for the reference genome, samples, strategy and output directories")
-rep("- `DB/rdata_%s/` - feature GRanges DB (%s objects), built by step 0", genome, length(list.files(db.dir, pattern = "\\.RData$")))
+rep("- `scripts/R/lib/init.R` - shared bootstrap: genome/strategy from the environment, samples auto-detected from `bams/`, output paths derived")
+rep("- `DB/rdata_%s/` - feature GRanges DB (%s objects), built by step 00", genome, length(list.files(db.dir, pattern = "\\.RData$")))
 rep("- `scripts/logs/step*.log` - console log of each step")
 rep("")
 

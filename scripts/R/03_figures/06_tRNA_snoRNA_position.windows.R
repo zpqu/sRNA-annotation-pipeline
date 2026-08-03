@@ -2,7 +2,7 @@
 ##Author: Zhipeng
 ## This script makes plots for the position distribution of small RNA reads
 ## with respect to tRNA and snoRNA genes (step 06).
-## Features for the reference genome set in config/genome.R are used. Reads are
+## Features for the reference genome set in the shared bootstrap (init.R) are used. Reads are
 ## taken from the step-2 annotated objects (rdata/*.bam.annotated.gr.RData in the
 ## strategy output directory), "AS.tRNA", "snoRNA", "AS.snoRNA", ...) and the
 ## non-redundant read 'count'. Window counts are weighted by 'count'. For each
@@ -15,7 +15,7 @@ suppressMessages(library(ggplot2))
 suppressMessages(library(scales))
 rm(list = ls())
 
-source("../../../config/genome.R")
+source("../lib/init.R")
 dir.rdata = file.path(out.dir, "rdata")
 dir.fig = file.path(out.dir, "figures")
 dir.create(dir.fig, recursive = TRUE, showWarnings = FALSE)
@@ -115,19 +115,10 @@ position.plot = function(dis.all.df, fig.base){
             fig.height = (as.integer((sample.num - 1) / 4) + 1) * 4
             fig.width = 16
       }
-      dis.all.df$class = paste(dis.all.df$position, dis.all.df$sample, sep = "-")
-      test.sense.df = as.data.frame(tapply(dis.all.df$sense,
-                                           as.factor(dis.all.df$class), mean))
-      names(test.sense.df) = "freq"
-      test.sense.df$position = as.numeric(gsub("\\-.+", "", rownames(test.sense.df)))
-      test.sense.df$sample = gsub(".+\\-", "", rownames(test.sense.df))
-      test.antisense.df = as.data.frame(tapply(dis.all.df$antisense,
-                                               as.factor(dis.all.df$class), mean))
-      names(test.antisense.df) = "freq"
-      test.antisense.df$position = as.numeric(gsub("\\-.+", "", rownames(test.antisense.df)))
-      test.antisense.df$sample = gsub(".+\\-", "", rownames(test.antisense.df))
+      test.sense.df = aggregate(sense ~ position + sample, data = dis.all.df, mean)
+      test.antisense.df = aggregate(antisense ~ position + sample, data = dis.all.df, mean)
 
-      p.sense = ggplot(data = test.sense.df, aes(x = position, y = freq)) +
+      p.sense = ggplot(data = test.sense.df, aes(x = position, y = sense)) +
             geom_bar(stat = "identity") +
             xlab("") + ylab("Mean count") +
             scale_y_continuous(labels = comma) +
@@ -136,7 +127,7 @@ position.plot = function(dis.all.df, fig.base){
             facet_wrap(~sample, ncol = 4)
       ggsave(p.sense, file = paste0(fig.base, ".pdf"), width = fig.width, height = fig.height)
 
-      p.antisense = ggplot(data = test.antisense.df, aes(x = position, y = freq)) +
+      p.antisense = ggplot(data = test.antisense.df, aes(x = position, y = antisense)) +
             geom_bar(stat = "identity") +
             xlab("") + ylab("Mean count") +
             scale_y_continuous(labels = comma) +
