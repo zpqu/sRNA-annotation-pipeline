@@ -11,7 +11,7 @@
 ## refGene.NM.exon.grl, ...), so the annotation scripts are genome-agnostic.
 ##
 ## Run from scripts/R/00_build_DB/ (same convention as the other pipeline
-## scripts), or invoke directly: Rscript scripts/R/00_build_DB/0_build_annotation_DB.R
+## scripts), or invoke directly: Rscript scripts/R/00_build_DB/00_build_annotation_DB.R
 
 suppressMessages({
   library(rtracklayer)

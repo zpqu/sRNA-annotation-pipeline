@@ -16,13 +16,10 @@
 ## Outputs are written to the directory resolved by config/genome.R
 ## (output/ for a single-strategy run; output/comparison/<strategy>/ inside a
 ## comparison run):
-##   tables/<sample>.{matmiRNA,snoRNA,piRNA,tRNA}.{annotation,size}.count.txt
-##   tables/<sample>.{read.annotation,read.size}.count.txt
-##   tables/<sample>.unique_reads_annotation.csv   (per-read annotation + abundance)
-##   tables/Table_unique_reads_annotation.csv      (all samples combined)
-##   tables/Table2a_annotation_count_unique_reads.csv
-##   tables/Table2b_annotation_count_all_reads.csv
-##   tables/Table2m_mature_miRNA_expression.csv    (top expressed mature miRNAs)
+##   tables/Table_02a_annotation_count_unique_reads.csv
+##   tables/Table_02b_annotation_count_all_reads.csv
+##   tables/Table_02m_mature_miRNA_expression.csv  (top expressed mature miRNAs)
+##   tables/Table_02_<sample>_unique_reads_annotation.csv  (per-read annotation + abundance)
 ##   rdata/<sample>.bam.annotated.gr.RData
 
 library(GenomicFeatures)
@@ -143,13 +140,6 @@ sense.hits = function(reads.gr, feature.gr){
 ###
 source("mygeneFeature.R")
 
-### count unique reads weighted by their frequency (sum of the 'count' column)
-count.by = function(group, counts){
-  dt = data.table(Var1 = as.character(group), Freq = as.numeric(counts))
-  dt = dt[, .(Freq = sum(Freq)), by = Var1]
-  return(as.data.frame(dt))
-}
-
 ### count per group: n_unique (each unique read once) and n_reads (weighted by count)
 count.by.2 = function(group, counts){
   dt = data.table(Var1 = as.character(group), count = as.numeric(counts))
@@ -170,7 +160,6 @@ add.counts = function(category, group, counts){
                                      item = dt$Var1, Freq = dt$n_reads))
 }
 
-sample.list = list()
 mat.expr.list = list()
 dir.step1 = file.path(out.base, "rdata")
 files = list.files(path = dir.step1, pattern = ".bam.unique.gr.RData$")
@@ -214,45 +203,21 @@ for(i in seq(along = files)){
 	    test.bam.hit.gr$n_features = hit.info$n_features
 	    if(feature.id == "matmiRNA"){
 	    		  test.bam.hit.gr = mygeneFeature(bam = "test.bam.hit.gr", type = sense.rule)
-			  matmiRNA.geneFeature.count.df = count.by(test.bam.hit.gr$region, test.bam.hit.gr$count)
-			  write.table(matmiRNA.geneFeature.count.df, file = file.path(dir.tab, paste(sample, ".matmiRNA.annotation.count.txt", sep = "")),
-			   sep = "\t", quote = F, col.names = T, row.names = F)
-			  matmiRNA.size.count.df = count.by(width(test.bam.hit.gr), test.bam.hit.gr$count)
-			  write.table(matmiRNA.size.count.df, file = file.path(dir.tab, paste(sample, ".matmiRNA.size.count.txt", sep = "")),
-			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  add.counts("matmiRNA.annotation", test.bam.hit.gr$region, test.bam.hit.gr$count)
 			  add.counts("matmiRNA.size", width(test.bam.hit.gr), test.bam.hit.gr$count)
 	    }
 	    if(feature.id == "snoRNA"){
 	    		  test.bam.hit.gr = mygeneFeature("test.bam.hit.gr", type = sense.rule)
-			  snoRNA.geneFeature.count.df = count.by(test.bam.hit.gr$region, test.bam.hit.gr$count)
-			  write.table(snoRNA.geneFeature.count.df, file = file.path(dir.tab, paste(sample, ".snoRNA.annotation.count.txt", sep = "")),
-			   sep = "\t", quote = F, col.names = T, row.names = F)
-			  snoRNA.size.count.df = count.by(width(test.bam.hit.gr), test.bam.hit.gr$count)
-			  write.table(snoRNA.size.count.df, file = file.path(dir.tab, paste(sample, ".snoRNA.size.count.txt", sep = "")),
-			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  add.counts("snoRNA.annotation", test.bam.hit.gr$region, test.bam.hit.gr$count)
 			  add.counts("snoRNA.size", width(test.bam.hit.gr), test.bam.hit.gr$count)
 	    }
 	    if(feature.id == "piRNA"){
 	    		  test.bam.hit.gr = mygeneFeature("test.bam.hit.gr", type = sense.rule)
-			  piRNA.geneFeature.count.df = count.by(test.bam.hit.gr$region, test.bam.hit.gr$count)
-			  write.table(piRNA.geneFeature.count.df, file = file.path(dir.tab, paste(sample, ".piRNA.annotation.count.txt", sep = "")),
-			   sep = "\t", quote = F, col.names = T, row.names = F)
-			  piRNA.size.count.df = count.by(width(test.bam.hit.gr), test.bam.hit.gr$count)
-			  write.table(piRNA.size.count.df, file = file.path(dir.tab, paste(sample, ".piRNA.size.count.txt", sep = "")),
-			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  add.counts("piRNA.annotation", test.bam.hit.gr$region, test.bam.hit.gr$count)
 			  add.counts("piRNA.size", width(test.bam.hit.gr), test.bam.hit.gr$count)
 	    }
 	    if(feature.id == "tRNA"){
 	    		  test.bam.hit.gr = mygeneFeature("test.bam.hit.gr", type = sense.rule)
-			  tRNA.geneFeature.count.df = count.by(test.bam.hit.gr$region, test.bam.hit.gr$count)
-			  write.table(tRNA.geneFeature.count.df, file = file.path(dir.tab, paste(sample, ".tRNA.annotation.count.txt", sep = "")),
-			   sep = "\t", quote = F, col.names = T, row.names = F)
-			  tRNA.size.count.df = count.by(width(test.bam.hit.gr), test.bam.hit.gr$count)
-			  write.table(tRNA.size.count.df, file = file.path(dir.tab, paste(sample, ".tRNA.size.count.txt", sep = "")),
-			   sep = "\t", quote = F, col.names = T, row.names = F)
 			  add.counts("tRNA.annotation", test.bam.hit.gr$region, test.bam.hit.gr$count)
 			  add.counts("tRNA.size", width(test.bam.hit.gr), test.bam.hit.gr$count)
 	    }
@@ -296,15 +261,11 @@ for(i in seq(along = files)){
       test.bam.other.gr$feature.id = rep(NA_character_, length(test.bam.other.gr))
       test.bam.other.gr$n_features = rep(NA_integer_, length(test.bam.other.gr))
       test.bam.new.gr = c(test.bam.new.gr, test.bam.other.gr)
-      read.annotation.count.df = count.by(test.bam.new.gr$type, test.bam.new.gr$count)
-      read.size.count.df = count.by(width(test.bam.new.gr), test.bam.new.gr$count)
       add.counts("read.annotation", test.bam.new.gr$type, test.bam.new.gr$count)
       add.counts("read.size", width(test.bam.new.gr), test.bam.new.gr$count)
       reads.bam.annotated.gr = test.bam.new.gr
       reads.bam.annotated.gr$rm.key = NULL
       save(reads.bam.annotated.gr, file = file.path(dir.rdata, paste(sample, ".bam.annotated.gr.RData", sep = "")))
-      write.table(read.annotation.count.df, file = file.path(dir.tab, paste(sample, ".read.annotation.count.txt", sep = "")), quote = F, sep = "\t", col.names = T, row.names = F)
-      write.table(read.size.count.df, file = file.path(dir.tab, paste(sample, ".read.size.count.txt", sep = "")), quote = F, sep = "\t", col.names = T, row.names = F)
 
       ### per-read annotation + abundance table (unique reads, sorted by expression)
       sample.dt = data.table(
@@ -323,10 +284,9 @@ for(i in seq(along = files)){
         gene_context = as.character(reads.bam.annotated.gr$region),
         n_features = as.integer(reads.bam.annotated.gr$n_features))
       setorder(sample.dt, -count, chr, start, end)
-      fwrite(sample.dt, file = file.path(dir.tab, paste(sample, ".unique_reads_annotation.csv", sep = "")))
-      sample.list[[i]] = sample.dt
+      fwrite(sample.dt, file = file.path(dir.tab, paste0("Table_02_", sample, "_unique_reads_annotation.csv")))
 
-      ### top expressed mature miRNAs (Table2m)
+      ### top expressed mature miRNAs (Table_02m)
       mat = sample.dt[category == "matmiRNA"]
       if(nrow(mat) > 0){
         mat.dt = mat[!is.na(feature_id), .(n_unique = .N, n_reads = sum(count)),
@@ -335,16 +295,12 @@ for(i in seq(along = files)){
       }
 }
 
-## ----- per-read annotation + abundance table, all samples combined ------------
-all.samples.dt = rbindlist(sample.list)
-fwrite(all.samples.dt, file.path(dir.tab, "Table_unique_reads_annotation.csv"))
-
 ## ----- top mature miRNA expression ----------------------------------------------
 mat.expr = rbindlist(mat.expr.list)
 setorder(mat.expr, sample, -n_reads)
-write.csv(mat.expr, file.path(dir.tab, "Table2m_mature_miRNA_expression.csv"), row.names = FALSE)
+write.csv(mat.expr, file.path(dir.tab, "Table_02m_mature_miRNA_expression.csv"), row.names = FALSE)
 
 ## ----- consolidated count tables (unique reads vs all reads) -------------------
-write.csv(unique.all.tab, file.path(dir.tab, "Table2a_annotation_count_unique_reads.csv"), row.names = FALSE)
-write.csv(reads.all.tab, file.path(dir.tab, "Table2b_annotation_count_all_reads.csv"), row.names = FALSE)
-print(paste("Tables saved to", dir.tab, ": Table2a_annotation_count_unique_reads.csv, Table2b_annotation_count_all_reads.csv, Table2m_mature_miRNA_expression.csv, Table_unique_reads_annotation.csv, <sample>.unique_reads_annotation.csv"))
+write.csv(unique.all.tab, file.path(dir.tab, "Table_02a_annotation_count_unique_reads.csv"), row.names = FALSE)
+write.csv(reads.all.tab, file.path(dir.tab, "Table_02b_annotation_count_all_reads.csv"), row.names = FALSE)
+print(paste("Tables saved to", dir.tab, ": Table_02a_annotation_count_unique_reads.csv, Table_02b_annotation_count_all_reads.csv, Table_02m_mature_miRNA_expression.csv, Table_02_<sample>_unique_reads_annotation.csv"))
