@@ -34,6 +34,34 @@ project.root <- if (basename(getwd()) %in% c("00_build_DB", "lib", "01_preproces
   stop("cannot locate project root from working directory ", getwd())
 }
 
+## publication-style figure sizing: fixed 180 mm width, max 220 mm height.
+## Returns c(width, height) in inches.  Height is computed from content and
+## capped at the maximum; width is always 7.09 in (180 mm).
+##   n      : number of facet panels (typically the number of samples)
+##   ncol   : number of facet columns
+##   per.h  : target panel height (inches)
+##   stack  : vertically stacked ggplots sharing the same facet layout
+fig.dims = function(n, ncol, per.h = 3.2, stack = 1){
+  width.mm  = 180
+  height.mm = 220
+  width  = width.mm / 25.4          # 7.09 in
+  ncol   = max(1L, min(ncol, n))
+  rows   = ceiling(n / ncol)
+  height = min(stack * rows * per.h, height.mm / 25.4)   # capped at 8.66 in
+  c(width = width, height = height)
+}
+
+## publication theme: smaller fonts suitable for 180 mm figures
+small.font = theme(
+  plot.title       = element_text(size = 8),
+  axis.title       = element_text(size = 8),
+  axis.text        = element_text(size = 7),
+  strip.text       = element_text(size = 8),
+  legend.title     = element_text(size = 8),
+  legend.text      = element_text(size = 7),
+  legend.key.size  = unit(0.25, "cm")
+)
+
 ## ---- annotation strategy -----------------------------------------------------
 canon.strategy = function(x){
   x = tolower(trimws(x))

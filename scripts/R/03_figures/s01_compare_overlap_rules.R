@@ -71,10 +71,13 @@ p.comp = ggplot(d.all, aes(x = item, y = pct_reads, fill = strategy)) +
   labs(title = "read.annotation composition - all reads (overlap-rule strategies)",
        y = "% of reads", x = NULL) +
   scale_fill_manual(values = cols) +
-  theme_bw() +
+  theme_bw() + small.font +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+d.s01a = fig.dims(length(samples), 1, per.h = 8.2)
 ggsave(p.comp, file = file.path(dir.fig, "Figure_s01a_overlap_rules_composition.pdf"),
-       width = 13, height = 6)
+       width = d.s01a["width"], height = d.s01a["height"])
+ggsave(p.comp, file = file.path(dir.fig, "Figure_s01a_overlap_rules_composition.png"),
+       width = d.s01a["width"], height = d.s01a["height"], dpi = 300)
 
 ## ---- 2) per-category read-size distributions ----------------------------------------
 size.all = data.table()
@@ -96,10 +99,13 @@ p.size = ggplot(size.all, aes(x = Var1, y = pct, fill = strategy)) +
   labs(title = "per-category read-size distribution (all reads)",
        x = "read length (nt)", y = "% within category") +
   scale_fill_manual(values = cols) +
-  theme_bw() +
+  theme_bw() + small.font +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+d.s01b = fig.dims(4 * length(samples), length(samples), per.h = 4.1)
 ggsave(p.size, file = file.path(dir.fig, "Figure_s01b_overlap_rules_category_size.pdf"),
-       width = 12, height = 10)
+       width = d.s01b["width"], height = d.s01b["height"])
+ggsave(p.size, file = file.path(dir.fig, "Figure_s01b_overlap_rules_category_size.png"),
+       width = d.s01b["width"], height = d.s01b["height"], dpi = 300)
 
 ## ---- 3) per-category totals + read-movement between strategies ----------------------
 cat.tot = dcast(d.all, sample + item ~ strategy, value.var = "pct_reads", fill = 0)

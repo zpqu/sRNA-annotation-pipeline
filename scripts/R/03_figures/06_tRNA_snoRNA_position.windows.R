@@ -108,13 +108,10 @@ save(snoRNA.dis.all.df, file = file.path(dir.rdata, "snoRNA.20bp.dis.all.df.RDat
 position.plot = function(dis.all.df, fig.base){
       if(is.null(dis.all.df) || nrow(dis.all.df) == 0) return(NULL)
       sample.num = length(unique(dis.all.df$sample))
-      if(sample.num < 4){
-            fig.width = sample.num * 4
-            fig.height = 4
-      }else{
-            fig.height = (as.integer((sample.num - 1) / 4) + 1) * 4
-            fig.width = 16
-      }
+      f.ncol = 4
+      fd = fig.dims(sample.num, f.ncol, per.h = 2.0)
+      fig.width  = fd["width"]
+      fig.height = fd["height"]
       test.sense.df = aggregate(sense ~ position + sample, data = dis.all.df, mean)
       test.antisense.df = aggregate(antisense ~ position + sample, data = dis.all.df, mean)
 
@@ -122,7 +119,7 @@ position.plot = function(dis.all.df, fig.base){
             geom_bar(stat = "identity") +
             xlab("") + ylab("Mean count") +
             scale_y_continuous(labels = comma) +
-            theme_bw() +
+            theme_bw() + small.font +
             theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
             facet_wrap(~sample, ncol = 4)
       ggsave(p.sense, file = paste0(fig.base, ".pdf"), width = fig.width, height = fig.height)
@@ -132,7 +129,7 @@ position.plot = function(dis.all.df, fig.base){
             geom_bar(stat = "identity") +
             xlab("") + ylab("Mean count") +
             scale_y_continuous(labels = comma) +
-            theme_bw() +
+            theme_bw() + small.font +
             theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
             facet_wrap(~sample, ncol = 4)
       ggsave(p.antisense, file = paste0(fig.base, "_AS.pdf"), width = fig.width, height = fig.height)

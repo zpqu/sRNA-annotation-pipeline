@@ -32,13 +32,10 @@ x.breaks = seq(ceiling(min(size.levels) / 5) * 5, max(size.levels), by = 5)
 if (x.breaks[1] > min(size.levels)) x.breaks = c(min(size.levels), x.breaks)
 
 sample.num = length(unique(all.read.df$sample))
-if(sample.num < 4){
-              fig.width = sample.num*4
-              fig.height = 4
-}else{
-        fig.height = (as.integer((sample.num-1)/4)+1)*4
-        fig.width = 16
-}
+f.ncol = 4
+fig.d = fig.dims(sample.num, f.ncol, per.h = 2.0)
+fig.width  = fig.d["width"]
+fig.height = fig.d["height"]
 for(j in 1:length(class.list)){
       single.class.df = all.read.df[all.read.df$category == paste0(class.list[j], ".size"), ]
       if(nrow(single.class.df) == 0) next
@@ -49,8 +46,8 @@ for(j in 1:length(class.list)){
 		   xlab("Read size (nt)") + ylab("Count") +
 		   scale_y_continuous(labels = comma) +
 		   scale_x_continuous(breaks = x.breaks) +
-		   theme_bw() +
-		   facet_wrap(~sample, ncol = 4)
+		   theme_bw() + small.font +
+		   facet_wrap(~sample, ncol = f.ncol)
       ggsave(p.sample.class.barplot, file = file.path(dir.fig, paste0("Figure_05a.", class.list[j], "_size_barplot.pdf")), width = fig.width, height = fig.height)
       ggsave(p.sample.class.barplot, file = file.path(dir.fig, paste0("Figure_05a.", class.list[j], "_size_barplot.png")), width = fig.width, height = fig.height, dpi = 300)
 
@@ -59,8 +56,8 @@ for(j in 1:length(class.list)){
 		   xlab("Read size (nt)") + ylab("Percentage") +
 		   scale_y_continuous(labels = percent) +
 		   scale_x_continuous(breaks = x.breaks) +
-		   theme_bw() +
-		   facet_wrap(~sample, ncol = 4)
+		   theme_bw() + small.font +
+		   facet_wrap(~sample, ncol = f.ncol)
       ggsave(p.sample.class.percent.plot, file = file.path(dir.fig, paste0("Figure_05b.", class.list[j], "_size_barplot.percentage.pdf")), width = fig.width, height = fig.height)
       ggsave(p.sample.class.percent.plot, file = file.path(dir.fig, paste0("Figure_05b.", class.list[j], "_size_barplot.percentage.png")), width = fig.width, height = fig.height, dpi = 300)
 }

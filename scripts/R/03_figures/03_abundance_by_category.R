@@ -123,16 +123,20 @@ for(s in samples){
 plot.dt = locus.tab[, log10_reads := log10(n_reads + 1)]
 plot.dt[, category := factor(category, levels = c("matmiRNA", "piRNA", "tRNA", "snoRNA"))]
 cat.cols = c(matmiRNA = "#1f78b4", piRNA = "#33a02c", tRNA = "#e31a1c", snoRNA = "#ff7f00")
+f.ncol = if (length(samples) <= 4) 2 else 4
 p1 = ggplot(plot.dt, aes(x = category, y = log10_reads, fill = category)) +
   geom_violin(scale = "width", alpha = 0.7) +
   geom_boxplot(width = 0.15, outlier.size = 0.2) +
-  facet_wrap(~sample, ncol = 2) +
+  facet_wrap(~sample, ncol = f.ncol) +
   labs(title = "per-locus read abundance by annotation category (current strategy)",
        x = NULL, y = expression(log[10](reads + 1))) +
   scale_fill_manual(values = cat.cols) +
-  theme_bw()
+  theme_bw() + small.font
+d1 = fig.dims(length(samples), f.ncol, per.h = 4.1)
 ggsave(p1, file = paste0(dir.out, "/figures/Figure_03a_per_locus_distribution.pdf"),
-       width = 8, height = 5)
+       width = d1["width"], height = d1["height"])
+ggsave(p1, file = paste0(dir.out, "/figures/Figure_03a_per_locus_distribution.png"),
+       width = d1["width"], height = d1["height"], dpi = 300)
 
 ## ---- Figure 2: rank-abundance (Whittaker) curves ------------------------------------------
 ra = locus.tab[, .(n_reads = base::sum(n_reads)), by = .(sample, category, locus)]
@@ -144,13 +148,16 @@ p2 = ggplot(ra, aes(x = rank, y = n_reads, color = category)) +
   geom_line(linewidth = 0.4, alpha = 0.8) +
   scale_x_log10(labels = comma) +
   scale_y_log10(labels = comma) +
-  facet_wrap(~sample, scales = "free_x", ncol = 2) +
+  facet_wrap(~sample, scales = "free_x", ncol = f.ncol) +
   labs(title = "rank-abundance curves per annotation category",
        x = "rank of locus (log10)", y = "reads (log10)") +
   scale_color_manual(values = cat.cols) +
-  theme_bw()
+  theme_bw() + small.font
+d2 = fig.dims(length(samples), f.ncol, per.h = 4.1)
 ggsave(p2, file = paste0(dir.out, "/figures/Figure_03b_rank_abundance.pdf"),
-       width = 10, height = 4.5)
+       width = d2["width"], height = d2["height"])
+ggsave(p2, file = paste0(dir.out, "/figures/Figure_03b_rank_abundance.png"),
+       width = d2["width"], height = d2["height"], dpi = 300)
 
 ## ---- Figure 3: Lorenz curves for matmiRNA ------------------------------------------------
 lorenz = function(x){
@@ -170,12 +177,15 @@ p3 = ggplot(lz, aes(i, cum_share)) +
   geom_abline(slope = 1, intercept = 0, linetype = 2) +
   geom_line(color = "steelblue", linewidth = 0.6) +
   coord_equal() +
-  facet_wrap(~sample, ncol = 2) +
+  facet_wrap(~sample, ncol = f.ncol) +
   labs(title = "Lorenz curves - mature miRNA loci (the more bowed, the more skewed)",
        x = "cumulative fraction of loci", y = "cumulative fraction of reads") +
-  theme_bw()
+  theme_bw() + small.font
+d3 = fig.dims(length(samples), f.ncol, per.h = 4.1)
 ggsave(p3, file = paste0(dir.out, "/figures/Figure_03c_lorenz_matmiRNA.pdf"),
-       width = 8, height = 4)
+       width = d3["width"], height = d3["height"])
+ggsave(p3, file = paste0(dir.out, "/figures/Figure_03c_lorenz_matmiRNA.png"),
+       width = d3["width"], height = d3["height"], dpi = 300)
 
 ## ---- console summary ----------------------------------------------------------------------
 out("== per-category dominance (all reads, both samples) ==")

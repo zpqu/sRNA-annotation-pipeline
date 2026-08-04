@@ -62,8 +62,9 @@ for(j in 1:length(class.list)){
       sub.dt$item = factor(sub.dt$item, levels = levels.use)
       sub.dt$group = orient.of(sub.dt$item)
       sample.num = length(unique(sub.dt$sample))
-      fig.width = 16
-      fig.height = 3.5 * sample.num + 1
+      fd = fig.dims(sample.num, 2, per.h = 4.1)
+      fig.width = fd["width"]
+      fig.height = fd["height"]
 
       ##percentage panel: complete all item x sample x flavor combos (zero-filled)
       all.combo = expand.grid(sample = unique(sub.dt$sample),
@@ -85,7 +86,7 @@ for(j in 1:length(class.list)){
             facet_grid(sample ~ flavor) +
             labs(title = paste0(class, " annotation - count"),
                  y = "Count (log10 scale)", x = NULL) +
-            theme_bw() + rot.theme
+            theme_bw() + rot.theme + small.font
 
       p.per = ggplot(sub.full, aes(x = item, y = per, fill = group)) +
             geom_bar(stat = "identity", width = 0.7) +
@@ -94,7 +95,7 @@ for(j in 1:length(class.list)){
             facet_grid(sample ~ flavor) +
             labs(title = paste0(class, " annotation - percentage"),
                  y = "Percentage", x = NULL) +
-            theme_bw() + rot.theme
+            theme_bw() + rot.theme + small.font
 
       save.plot = function(gg, base) {
             pdf(paste0(base, ".pdf"), width = fig.width, height = fig.height)

@@ -133,43 +133,46 @@ write.csv(size.tab, file.path(dir.tab, "Table_01b_read_size_distribution.csv"), 
 write.csv(count.tab, file.path(dir.tab, "Table_01c_read_count_distribution.csv"), row.names = FALSE)
 write.csv(bin.tab, file.path(dir.tab, "Table_01d_read_size_vs_count.csv"), row.names = FALSE)
 
-## ----- size vs count distribution/density figures (one figure, faceted by sample) ----
+## ----- size vs count distribution/density figures (samples as rows, 3 plot types as columns)
 x.breaks = seq(floor(min(size.tab$width) / 5) * 5, max(size.tab$width), by = 5)
 rot.theme = theme(axis.text.x = element_text(angle = 45, hjust = 1))
 n.samp = length(unique(size.tab$sample))
-facet.cols = min(2, n.samp)
 
 p.size = ggplot(size.tab, aes(x = width, y = n_unique)) +
   geom_col(fill = "steelblue") +
   scale_x_continuous(breaks = x.breaks) +
-  facet_wrap(~sample, ncol = facet.cols, scales = "free_x") +
+  facet_wrap(~sample, ncol = 1, scales = "free_x") +
   labs(title = "Read size distribution (unique reads)",
        x = "Read size (nt)", y = "Number of unique reads") +
-  theme_bw() + rot.theme
+  theme_bw() + rot.theme + small.font
 
 p.count = ggplot(dens.tab, aes(x = lc)) +
   geom_density(fill = "grey70", alpha = 0.6) +
-  facet_wrap(~sample, ncol = facet.cols, scales = "free_y") +
+  facet_wrap(~sample, ncol = 1, scales = "free_y") +
   labs(title = "Count distribution (unique reads)",
        x = "log2(count)", y = "Density") +
-  theme_bw() + rot.theme
+  theme_bw() + rot.theme + small.font
 
 p.2d = ggplot(bin.tab, aes(x = width, y = lc, fill = n_unique)) +
   geom_tile() +
   scale_fill_gradient(low = "grey90", high = "darkred", trans = "log10",
                       name = "unique reads") +
   scale_x_continuous(breaks = x.breaks) +
-  facet_wrap(~sample, ncol = facet.cols, scales = "free") +
+  facet_wrap(~sample, ncol = 1, scales = "free") +
   labs(title = "Read size vs count density",
        x = "Read size (nt)", y = "log2(count)") +
-  theme_bw() + rot.theme
+  theme_bw() + rot.theme + small.font
 
+per.h.mm = 69
+total.height.mm = min(n.samp * per.h.mm, 220)
+fig.width  = 180 / 25.4
+fig.height = total.height.mm / 25.4
 fig.base = file.path(dir.fig, "Figure_01.read_size_vs_count")
-pdf(paste0(fig.base, ".pdf"), width = 15, height = 4.2 * n.samp)
-print(p.size / p.count / p.2d)
+pdf(paste0(fig.base, ".pdf"), width = fig.width, height = fig.height)
+print(p.size | p.count | p.2d)
 dev.off()
-png(paste0(fig.base, ".png"), width = 4500, height = 1260 * n.samp, res = 300)
-print(p.size / p.count / p.2d)
+png(paste0(fig.base, ".png"), width = round(fig.width * 300), height = round(fig.height * 300), res = 300)
+print(p.size | p.count | p.2d)
 dev.off()
 
 print(paste0("Tables saved to ", dir.tab, ": Table_01a_sample_summary.csv, Table_01b_read_size_distribution.csv, Table_01c_read_count_distribution.csv, Table_01d_read_size_vs_count.csv"))

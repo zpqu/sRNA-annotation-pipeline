@@ -103,11 +103,11 @@ desc.rules <- list(
   list(re = "^Figure_05a\\..*_size_barplot\\.(pdf|png)$", d = "Per-class read-size barplots (step 05)"),
   list(re = "^Figure_05b\\..*_size_barplot\\.percentage\\.(pdf|png)$", d = "Per-class read-size percentage barplots (step 05)"),
   list(re = "^Figure_06\\.(tRNA|snoRNA)_pos_barplot(_AS)?\\.(pdf|png)$", d = "Position-distribution barplots for tRNA/snoRNA genes (step 06)"),
-  list(re = "^Figure_s01a_overlap_rules_composition\\.pdf$", d = "Overlap-rule annotation composition (step s01)"),
-  list(re = "^Figure_s01b_overlap_rules_category_size\\.pdf$", d = "Overlap-rule per-category read-size distributions (step s01)"),
-  list(re = "^Figure_03a_per_locus_distribution\\.pdf$", d = "Per-locus log10 abundance distribution per category (step 03)"),
-  list(re = "^Figure_03b_rank_abundance\\.pdf$", d = "Rank-abundance (Whittaker) curves per category (step 03)"),
-  list(re = "^Figure_03c_lorenz_matmiRNA\\.pdf$", d = "Lorenz curves for mature-miRNA loci (step 03)")
+  list(re = "^Figure_s01a_overlap_rules_composition\\.(pdf|png)$", d = "Overlap-rule annotation composition (step s01)"),
+  list(re = "^Figure_s01b_overlap_rules_category_size\\.(pdf|png)$", d = "Overlap-rule per-category read-size distributions (step s01)"),
+  list(re = "^Figure_03a_per_locus_distribution\\.(pdf|png)$", d = "Per-locus log10 abundance distribution per category (step 03)"),
+  list(re = "^Figure_03b_rank_abundance\\.(pdf|png)$", d = "Rank-abundance (Whittaker) curves per category (step 03)"),
+  list(re = "^Figure_03c_lorenz_matmiRNA\\.(pdf|png)$", d = "Lorenz curves for mature-miRNA loci (step 03)")
 )
 describe.file = function(f){
   for (r in desc.rules) if (grepl(r$re, f)) return(r$d)
