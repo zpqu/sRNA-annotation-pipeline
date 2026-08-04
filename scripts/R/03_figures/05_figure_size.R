@@ -27,6 +27,10 @@ class.list = c("read", "matmiRNA", "piRNA", "snoRNA", "tRNA")
 size.levels = sort(unique(as.integer(all.read.df$item[all.read.df$category %in%
                         paste0(class.list, ".size")])))
 
+## x-axis tick labels every 5 nt on a continuous axis to avoid overstacking
+x.breaks = seq(ceiling(min(size.levels) / 5) * 5, max(size.levels), by = 5)
+if (x.breaks[1] > min(size.levels)) x.breaks = c(min(size.levels), x.breaks)
+
 sample.num = length(unique(all.read.df$sample))
 if(sample.num < 4){
               fig.width = sample.num*4
@@ -39,20 +43,22 @@ for(j in 1:length(class.list)){
       single.class.df = all.read.df[all.read.df$category == paste0(class.list[j], ".size"), ]
       if(nrow(single.class.df) == 0) next
       single.class.df$per = single.class.df$Freq/sum(single.class.df$Freq)
-      single.class.df$item = factor(single.class.df$item, levels = as.character(size.levels))
+      single.class.df$item = as.numeric(as.character(single.class.df$item))
       p.sample.class.barplot = ggplot(data = single.class.df, aes(x = item, y = Freq)) +
-		   geom_bar(stat = "identity") +
+		   geom_col(width = 0.8) +
 		   xlab("Read size (nt)") + ylab("Count") +
 		   scale_y_continuous(labels = comma) +
+		   scale_x_continuous(breaks = x.breaks) +
 		   theme_bw() +
 		   facet_wrap(~sample, ncol = 4)
       ggsave(p.sample.class.barplot, file = file.path(dir.fig, paste0("Figure_05a.", class.list[j], "_size_barplot.pdf")), width = fig.width, height = fig.height)
       ggsave(p.sample.class.barplot, file = file.path(dir.fig, paste0("Figure_05a.", class.list[j], "_size_barplot.png")), width = fig.width, height = fig.height, dpi = 300)
 
       p.sample.class.percent.plot = ggplot(data = single.class.df, aes(x = item, y = per)) +
-		   geom_bar(stat = "identity") +
+		   geom_col(width = 0.8) +
 		   xlab("Read size (nt)") + ylab("Percentage") +
 		   scale_y_continuous(labels = percent) +
+		   scale_x_continuous(breaks = x.breaks) +
 		   theme_bw() +
 		   facet_wrap(~sample, ncol = 4)
       ggsave(p.sample.class.percent.plot, file = file.path(dir.fig, paste0("Figure_05b.", class.list[j], "_size_barplot.percentage.pdf")), width = fig.width, height = fig.height)
