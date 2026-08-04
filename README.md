@@ -127,7 +127,7 @@ writes shared step-1 results to `output/comparison/` and per-strategy subfolders
 |---|---|---|
 | 00 | `00_build_DB/00_build_annotation_DB.R` | Builds the 24 feature GRanges objects from the six raw files into `DB/rdata_<genome>/`. |
 | 01 | `01_preprocess/01_format_bam.R` | Formats BAMs into per-read GRanges, computes unique reads and counts (`Table_01a–d`, `Figure_01`). |
-| 02 | `02_annotation/02_annotation_smallRNA.R` | Annotates each read to a single feature class, sense/antisense; count matrices + per-read CSV (`Table_02a/b`, `Table_02m`, `Table_02_<sample>_unique_reads_annotation.csv`). |
+| 02 | `02_annotation/02_annotation_smallRNA.R` | Annotates each read to a single feature class, sense/antisense; count matrices + per-read CSV (`Table_02a/b`, `Table_02_<sample>_unique_reads_annotation.csv`). |
 | 03 | `03_figures/03_abundance_by_category.R` | Abundance/per-locus analyses for mature miRNAs (`Table_03a/b`, `Figure_03a–c`). |
 | 04 | `03_figures/04_figure_annotation.R` | Annotation-composition barplots (`Figure_04a–e`). |
 | 05 | `03_figures/05_figure_size.R` | Read-size distributions (`Figure_05a/b`). |
@@ -141,7 +141,7 @@ Everything is written below `output/` (or `output/comparison/`), organised into
 `tables/`, `figures/` and `rdata/`:
 
 - `tables/` — cross-sample count matrices (`Table_01a–d`, `Table_02a/b`,
-  `Table_02m`, `Table_03a/b`, `Table_s01a–e`, `Table_10`), per-sample
+  `Table_03a/b`, `Table_s01a–e`, `Table_10`), per-sample
   annotation tables (`Table_02_<sample>_unique_reads_annotation.csv`).
 - `figures/` — PDF/PNG figures (`Figure_01`, `Figure_03a–c`, `Figure_04a–e`,
   `Figure_05a/b`, `Figure_06`, `Figure_s01a/b`).

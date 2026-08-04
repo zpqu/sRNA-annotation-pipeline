@@ -78,7 +78,6 @@ desc.rules <- list(
   ## step 02 consolidated count tables
   list(re = "^Table_02a_annotation_count_unique_reads\\.csv$", d = "Annotation composition, unique reads (each unique read counted once)"),
   list(re = "^Table_02b_annotation_count_all_reads\\.csv$", d = "Annotation composition, all reads (weighted by read frequency)"),
-  list(re = "^Table_02m_mature_miRNA_expression\\.csv$", d = "Top expressed mature miRNAs (name, n_unique, n_reads) per sample"),
   ## step 02 per-unique-read annotation tables
   list(re = sprintf("^Table_02_(%s)_unique_reads_annotation\\.csv$", SAM), d = "Per-unique-read annotation + abundance for this sample (sorted by count descending)"),
   ## step s01 (overlap-rule comparison, comparison mode only)
@@ -101,9 +100,9 @@ desc.rules <- list(
   ## figures
   list(re = "^Figure_01\\.read_size_vs_count\\.(pdf|png)$", d = "Read size / count distribution figure, faceted by sample (step 01)"),
   list(re = "^Figure_04[a-e]\\..*\\.(pdf|png)$", d = "Annotation count / percentage barplots (step 04)"),
-  list(re = "^Figure_05a\\..*_size_barplot\\.pdf$", d = "Per-class read-size barplots (step 05)"),
-  list(re = "^Figure_05b\\..*_size_barplot\\.percentage\\.pdf$", d = "Per-class read-size percentage barplots (step 05)"),
-  list(re = "^Figure_06\\.(tRNA|snoRNA)_pos_barplot(_AS)?\\.pdf$", d = "Position-distribution barplots for tRNA/snoRNA genes (step 06)"),
+  list(re = "^Figure_05a\\..*_size_barplot\\.(pdf|png)$", d = "Per-class read-size barplots (step 05)"),
+  list(re = "^Figure_05b\\..*_size_barplot\\.percentage\\.(pdf|png)$", d = "Per-class read-size percentage barplots (step 05)"),
+  list(re = "^Figure_06\\.(tRNA|snoRNA)_pos_barplot(_AS)?\\.(pdf|png)$", d = "Position-distribution barplots for tRNA/snoRNA genes (step 06)"),
   list(re = "^Figure_s01a_overlap_rules_composition\\.pdf$", d = "Overlap-rule annotation composition (step s01)"),
   list(re = "^Figure_s01b_overlap_rules_category_size\\.pdf$", d = "Overlap-rule per-category read-size distributions (step s01)"),
   list(re = "^Figure_03a_per_locus_distribution\\.pdf$", d = "Per-locus log10 abundance distribution per category (step 03)"),
@@ -232,9 +231,15 @@ rep("")
 
 ## ---- 2.5 top mature miRNAs ---------------------------------------------------
 for (st in active.strats){
-  t2m = read.tab(file.path(strat.path(st), "tables/Table_02m_mature_miRNA_expression.csv"))
-  if (is.null(t2m)) next
-  rep("### 2.5 Top expressed mature miRNAs - strategy `%s` (Table_02m)\n", st)
+  csvs = file.path(strat.path(st), "tables", paste0("Table_02_", samples, "_unique_reads_annotation.csv"))
+  if (!all(file.exists(csvs))) next
+  t2m = rbindlist(lapply(csvs, function(csv){
+    dt = fread(csv)
+    dt[category == "matmiRNA" & !is.na(feature_id),
+       .(n_unique = .N, n_reads = sum(count)), by = .(sample, name = feature_id)]
+  }))
+  if (nrow(t2m) == 0) next
+  rep("### 2.5 Top expressed mature miRNAs - strategy `%s` (derived from `Table_02_<sample>_unique_reads_annotation.csv`)\n", st)
   for (s in samples){
     x = t2m[sample == s][order(-n_reads)][1:min(10, .N)]
     rep("**%s**\n", s)

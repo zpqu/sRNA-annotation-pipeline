@@ -18,7 +18,6 @@
 ## output/comparison/<strategy>/ inside a comparison run):
 ##   tables/Table_02a_annotation_count_unique_reads.csv
 ##   tables/Table_02b_annotation_count_all_reads.csv
-##   tables/Table_02m_mature_miRNA_expression.csv  (top expressed mature miRNAs)
 ##   tables/Table_02_<sample>_unique_reads_annotation.csv  (per-read annotation + abundance)
 ##   rdata/<sample>.bam.annotated.gr.RData
 
@@ -160,7 +159,6 @@ add.counts = function(category, group, counts){
                                      item = dt$Var1, Freq = dt$n_reads))
 }
 
-mat.expr.list = list()
 dir.step1 = file.path(out.base, "rdata")
 files = list.files(path = dir.step1, pattern = ".bam.unique.gr.RData$")
 if(length(files) == 0) stop("no *.bam.unique.gr.RData found in ", dir.step1, " (run step 1 first)")
@@ -285,22 +283,9 @@ for(i in seq(along = files)){
         n_features = as.integer(reads.bam.annotated.gr$n_features))
       setorder(sample.dt, -count, chr, start, end)
       fwrite(sample.dt, file = file.path(dir.tab, paste0("Table_02_", sample, "_unique_reads_annotation.csv")))
-
-      ### top expressed mature miRNAs (Table_02m)
-      mat = sample.dt[category == "matmiRNA"]
-      if(nrow(mat) > 0){
-        mat.dt = mat[!is.na(feature_id), .(n_unique = .N, n_reads = sum(count)),
-                     by = .(sample, name = feature_id)]
-        mat.expr.list[[i]] = mat.dt[order(-n_reads)]
-      }
 }
-
-## ----- top mature miRNA expression ----------------------------------------------
-mat.expr = rbindlist(mat.expr.list)
-setorder(mat.expr, sample, -n_reads)
-write.csv(mat.expr, file.path(dir.tab, "Table_02m_mature_miRNA_expression.csv"), row.names = FALSE)
 
 ## ----- consolidated count tables (unique reads vs all reads) -------------------
 write.csv(unique.all.tab, file.path(dir.tab, "Table_02a_annotation_count_unique_reads.csv"), row.names = FALSE)
 write.csv(reads.all.tab, file.path(dir.tab, "Table_02b_annotation_count_all_reads.csv"), row.names = FALSE)
-print(paste("Tables saved to", dir.tab, ": Table_02a_annotation_count_unique_reads.csv, Table_02b_annotation_count_all_reads.csv, Table_02m_mature_miRNA_expression.csv, Table_02_<sample>_unique_reads_annotation.csv"))
+print(paste("Tables saved to", dir.tab, ": Table_02a_annotation_count_unique_reads.csv, Table_02b_annotation_count_all_reads.csv, Table_02_<sample>_unique_reads_annotation.csv"))

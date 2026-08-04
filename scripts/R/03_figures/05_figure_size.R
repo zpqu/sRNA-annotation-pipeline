@@ -6,8 +6,8 @@
 ## annotation class, the read-size distribution (faceted by sample).
 ##
 ## Outputs (step 05):
-##   figures/Figure_05a.<class>_size_barplot.pdf              (counts, all reads)
-##   figures/Figure_05b.<class>_size_barplot.percentage.pdf   (percentage)
+##   figures/Figure_05a.<class>_size_barplot.pdf/.png              (counts, all reads)
+##   figures/Figure_05b.<class>_size_barplot.percentage.pdf/.png   (percentage)
 
 library(ggplot2)
 library(scales)
@@ -47,6 +47,7 @@ for(j in 1:length(class.list)){
 		   theme_bw() +
 		   facet_wrap(~sample, ncol = 4)
       ggsave(p.sample.class.barplot, file = file.path(dir.fig, paste0("Figure_05a.", class.list[j], "_size_barplot.pdf")), width = fig.width, height = fig.height)
+      ggsave(p.sample.class.barplot, file = file.path(dir.fig, paste0("Figure_05a.", class.list[j], "_size_barplot.png")), width = fig.width, height = fig.height, dpi = 300)
 
       p.sample.class.percent.plot = ggplot(data = single.class.df, aes(x = item, y = per)) +
 		   geom_bar(stat = "identity") +
@@ -55,4 +56,5 @@ for(j in 1:length(class.list)){
 		   theme_bw() +
 		   facet_wrap(~sample, ncol = 4)
       ggsave(p.sample.class.percent.plot, file = file.path(dir.fig, paste0("Figure_05b.", class.list[j], "_size_barplot.percentage.pdf")), width = fig.width, height = fig.height)
+      ggsave(p.sample.class.percent.plot, file = file.path(dir.fig, paste0("Figure_05b.", class.list[j], "_size_barplot.percentage.png")), width = fig.width, height = fig.height, dpi = 300)
 }

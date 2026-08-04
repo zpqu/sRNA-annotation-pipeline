@@ -126,6 +126,7 @@ position.plot = function(dis.all.df, fig.base){
             theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
             facet_wrap(~sample, ncol = 4)
       ggsave(p.sense, file = paste0(fig.base, ".pdf"), width = fig.width, height = fig.height)
+      ggsave(p.sense, file = paste0(fig.base, ".png"), width = fig.width, height = fig.height, dpi = 300)
 
       p.antisense = ggplot(data = test.antisense.df, aes(x = position, y = antisense)) +
             geom_bar(stat = "identity") +
@@ -135,6 +136,7 @@ position.plot = function(dis.all.df, fig.base){
             theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
             facet_wrap(~sample, ncol = 4)
       ggsave(p.antisense, file = paste0(fig.base, "_AS.pdf"), width = fig.width, height = fig.height)
+      ggsave(p.antisense, file = paste0(fig.base, "_AS.png"), width = fig.width, height = fig.height, dpi = 300)
       print(paste("saved:", fig.base, Sys.time()))
 }
 
