@@ -123,7 +123,7 @@ for(s in samples){
 plot.dt = locus.tab[, log10_reads := log10(n_reads + 1)]
 plot.dt[, category := factor(category, levels = c("matmiRNA", "piRNA", "tRNA", "snoRNA"))]
 cat.cols = c(matmiRNA = "#1f78b4", piRNA = "#33a02c", tRNA = "#e31a1c", snoRNA = "#ff7f00")
-f.ncol = if (length(samples) <= 4) 2 else 4
+f.ncol = if (length(samples) <= 8) 2 else 4
 p1 = ggplot(plot.dt, aes(x = category, y = log10_reads, fill = category)) +
   geom_violin(scale = "width", alpha = 0.7) +
   geom_boxplot(width = 0.15, outlier.size = 0.2) +
