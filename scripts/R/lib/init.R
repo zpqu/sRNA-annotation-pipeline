@@ -52,15 +52,18 @@ fig.dims = function(n, ncol, per.h = 3.2, stack = 1){
 }
 
 ## publication theme: smaller fonts suitable for 180 mm figures
-small.font = theme(
-  plot.title       = element_text(size = 8),
-  axis.title       = element_text(size = 8),
-  axis.text        = element_text(size = 7),
-  strip.text       = element_text(size = 8),
-  legend.title     = element_text(size = 8),
-  legend.text      = element_text(size = 7),
-  legend.key.size  = unit(0.25, "cm")
-)
+## Defined as a function so ggplot2 only needs to be loaded when the caller uses it.
+small.font = function(){
+  theme(
+    plot.title       = element_text(size = 8),
+    axis.title       = element_text(size = 8),
+    axis.text        = element_text(size = 7),
+    strip.text       = element_text(size = 8),
+    legend.title     = element_text(size = 8),
+    legend.text      = element_text(size = 7),
+    legend.key.size  = unit(0.25, "cm")
+  )
+}
 
 ## ---- annotation strategy -----------------------------------------------------
 canon.strategy = function(x){

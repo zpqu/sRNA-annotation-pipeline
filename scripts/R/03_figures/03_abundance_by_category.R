@@ -131,7 +131,7 @@ p1 = ggplot(plot.dt, aes(x = category, y = log10_reads, fill = category)) +
   labs(title = "per-locus read abundance by annotation category (current strategy)",
        x = NULL, y = expression(log[10](reads + 1))) +
   scale_fill_manual(values = cat.cols) +
-  theme_bw() + small.font
+  theme_bw() + small.font()
 d1 = fig.dims(length(samples), f.ncol, per.h = 4.1)
 ggsave(p1, file = paste0(dir.out, "/figures/Figure_03a_per_locus_distribution.pdf"),
        width = d1["width"], height = d1["height"])
@@ -152,7 +152,7 @@ p2 = ggplot(ra, aes(x = rank, y = n_reads, color = category)) +
   labs(title = "rank-abundance curves per annotation category",
        x = "rank of locus (log10)", y = "reads (log10)") +
   scale_color_manual(values = cat.cols) +
-  theme_bw() + small.font
+  theme_bw() + small.font()
 d2 = fig.dims(length(samples), f.ncol, per.h = 4.1)
 ggsave(p2, file = paste0(dir.out, "/figures/Figure_03b_rank_abundance.pdf"),
        width = d2["width"], height = d2["height"])
@@ -180,7 +180,7 @@ p3 = ggplot(lz, aes(i, cum_share)) +
   facet_wrap(~sample, ncol = f.ncol) +
   labs(title = "Lorenz curves - mature miRNA loci (the more bowed, the more skewed)",
        x = "cumulative fraction of loci", y = "cumulative fraction of reads") +
-  theme_bw() + small.font
+  theme_bw() + small.font()
 d3 = fig.dims(length(samples), f.ncol, per.h = 4.1)
 ggsave(p3, file = paste0(dir.out, "/figures/Figure_03c_lorenz_matmiRNA.pdf"),
        width = d3["width"], height = d3["height"])

@@ -86,7 +86,7 @@ for(j in 1:length(class.list)){
             facet_grid(sample ~ flavor) +
             labs(title = paste0(class, " annotation - count"),
                  y = "Count (log10 scale)", x = NULL) +
-            theme_bw() + rot.theme + small.font
+            theme_bw() + rot.theme + small.font()
 
       p.per = ggplot(sub.full, aes(x = item, y = per, fill = group)) +
             geom_bar(stat = "identity", width = 0.7) +
@@ -95,7 +95,7 @@ for(j in 1:length(class.list)){
             facet_grid(sample ~ flavor) +
             labs(title = paste0(class, " annotation - percentage"),
                  y = "Percentage", x = NULL) +
-            theme_bw() + rot.theme + small.font
+            theme_bw() + rot.theme + small.font()
 
       save.plot = function(gg, base) {
             pdf(paste0(base, ".pdf"), width = fig.width, height = fig.height)

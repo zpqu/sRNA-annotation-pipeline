@@ -144,14 +144,14 @@ p.size = ggplot(size.tab, aes(x = width, y = n_unique)) +
   facet_wrap(~sample, ncol = 1, scales = "free_x") +
   labs(title = "Read size distribution (unique reads)",
        x = "Read size (nt)", y = "Number of unique reads") +
-  theme_bw() + rot.theme + small.font
+  theme_bw() + rot.theme + small.font()
 
 p.count = ggplot(dens.tab, aes(x = lc)) +
   geom_density(fill = "grey70", alpha = 0.6) +
   facet_wrap(~sample, ncol = 1, scales = "free_y") +
   labs(title = "Count distribution (unique reads)",
        x = "log2(count)", y = "Density") +
-  theme_bw() + rot.theme + small.font
+  theme_bw() + rot.theme + small.font()
 
 p.2d = ggplot(bin.tab, aes(x = width, y = lc, fill = n_unique)) +
   geom_tile() +
@@ -161,7 +161,7 @@ p.2d = ggplot(bin.tab, aes(x = width, y = lc, fill = n_unique)) +
   facet_wrap(~sample, ncol = 1, scales = "free") +
   labs(title = "Read size vs count density",
        x = "Read size (nt)", y = "log2(count)") +
-  theme_bw() + rot.theme + small.font
+  theme_bw() + rot.theme + small.font()
 
 per.h.mm = 69
 total.height.mm = min(n.samp * per.h.mm, 220)

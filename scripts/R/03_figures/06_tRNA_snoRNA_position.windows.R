@@ -119,7 +119,7 @@ position.plot = function(dis.all.df, fig.base){
             geom_bar(stat = "identity") +
             xlab("") + ylab("Mean count") +
             scale_y_continuous(labels = comma) +
-            theme_bw() + small.font +
+            theme_bw() + small.font() +
             theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
             facet_wrap(~sample, ncol = 4)
       ggsave(p.sense, file = paste0(fig.base, ".pdf"), width = fig.width, height = fig.height)
@@ -129,7 +129,7 @@ position.plot = function(dis.all.df, fig.base){
             geom_bar(stat = "identity") +
             xlab("") + ylab("Mean count") +
             scale_y_continuous(labels = comma) +
-            theme_bw() + small.font +
+            theme_bw() + small.font() +
             theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
             facet_wrap(~sample, ncol = 4)
       ggsave(p.antisense, file = paste0(fig.base, "_AS.pdf"), width = fig.width, height = fig.height)

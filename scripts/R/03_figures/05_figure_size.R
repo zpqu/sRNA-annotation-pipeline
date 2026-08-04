@@ -46,7 +46,7 @@ for(j in 1:length(class.list)){
 		   xlab("Read size (nt)") + ylab("Count") +
 		   scale_y_continuous(labels = comma) +
 		   scale_x_continuous(breaks = x.breaks) +
-		   theme_bw() + small.font +
+		   theme_bw() + small.font() +
 		   facet_wrap(~sample, ncol = f.ncol)
       ggsave(p.sample.class.barplot, file = file.path(dir.fig, paste0("Figure_05a.", class.list[j], "_size_barplot.pdf")), width = fig.width, height = fig.height)
       ggsave(p.sample.class.barplot, file = file.path(dir.fig, paste0("Figure_05a.", class.list[j], "_size_barplot.png")), width = fig.width, height = fig.height, dpi = 300)
@@ -56,7 +56,7 @@ for(j in 1:length(class.list)){
 		   xlab("Read size (nt)") + ylab("Percentage") +
 		   scale_y_continuous(labels = percent) +
 		   scale_x_continuous(breaks = x.breaks) +
-		   theme_bw() + small.font +
+		   theme_bw() + small.font() +
 		   facet_wrap(~sample, ncol = f.ncol)
       ggsave(p.sample.class.percent.plot, file = file.path(dir.fig, paste0("Figure_05b.", class.list[j], "_size_barplot.percentage.pdf")), width = fig.width, height = fig.height)
       ggsave(p.sample.class.percent.plot, file = file.path(dir.fig, paste0("Figure_05b.", class.list[j], "_size_barplot.percentage.png")), width = fig.width, height = fig.height, dpi = 300)
