@@ -32,8 +32,8 @@ x.breaks = seq(ceiling(min(size.levels) / 5) * 5, max(size.levels), by = 5)
 if (x.breaks[1] > min(size.levels)) x.breaks = c(min(size.levels), x.breaks)
 
 sample.num = length(unique(all.read.df$sample))
-f.ncol = 4
-fig.d = fig.dims(sample.num, f.ncol, per.h = 2.0)
+f.ncol = if (sample.num <= 8) 2 else 4
+fig.d = fig.dims(sample.num, f.ncol, per.h = (180 / f.ncol) * 1.15 / 25.4)
 fig.width  = fig.d["width"]
 fig.height = fig.d["height"]
 for(j in 1:length(class.list)){
@@ -43,7 +43,8 @@ for(j in 1:length(class.list)){
       single.class.df$item = as.numeric(as.character(single.class.df$item))
       p.sample.class.barplot = ggplot(data = single.class.df, aes(x = item, y = Freq)) +
 		   geom_col(width = 0.8) +
-		   xlab("Read size (nt)") + ylab("Count") +
+		   labs(title = paste0(class.list[j], " read-size distribution (all reads)"),
+		        x = "Read size (nt)", y = "Count") +
 		   scale_y_continuous(labels = comma) +
 		   scale_x_continuous(breaks = x.breaks) +
 		   theme_bw() + small.font() +
@@ -53,7 +54,8 @@ for(j in 1:length(class.list)){
 
       p.sample.class.percent.plot = ggplot(data = single.class.df, aes(x = item, y = per)) +
 		   geom_col(width = 0.8) +
-		   xlab("Read size (nt)") + ylab("Percentage") +
+		   labs(title = paste0(class.list[j], " read-size distribution - percentage (all reads)"),
+		        x = "Read size (nt)", y = "Percentage") +
 		   scale_y_continuous(labels = percent) +
 		   scale_x_continuous(breaks = x.breaks) +
 		   theme_bw() + small.font() +

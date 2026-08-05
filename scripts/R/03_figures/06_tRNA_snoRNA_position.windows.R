@@ -105,11 +105,11 @@ save(tRNA.dis.all.df, file = file.path(dir.rdata, "tRNA.20bp.dis.all.df.RData"))
 save(snoRNA.dis.all.df, file = file.path(dir.rdata, "snoRNA.20bp.dis.all.df.RData"))
 
 ## ---- plot tRNA ---------------------------------------------------------------
-position.plot = function(dis.all.df, fig.base){
+position.plot = function(dis.all.df, fig.base, fig.title){
       if(is.null(dis.all.df) || nrow(dis.all.df) == 0) return(NULL)
       sample.num = length(unique(dis.all.df$sample))
-      f.ncol = 4
-      fd = fig.dims(sample.num, f.ncol, per.h = 2.0)
+      f.ncol = if (sample.num <= 8) 2 else 4
+      fd = fig.dims(sample.num, f.ncol, per.h = (180 / f.ncol) * 1.15 / 25.4)
       fig.width  = fd["width"]
       fig.height = fd["height"]
       test.sense.df = aggregate(sense ~ position + sample, data = dis.all.df, mean)
@@ -117,25 +117,27 @@ position.plot = function(dis.all.df, fig.base){
 
       p.sense = ggplot(data = test.sense.df, aes(x = position, y = sense)) +
             geom_bar(stat = "identity") +
-            xlab("") + ylab("Mean count") +
+            labs(title = paste0(fig.title, " - sense read position distribution (20 bp windows)"),
+                 x = "", y = "Mean count") +
             scale_y_continuous(labels = comma) +
             theme_bw() + small.font() +
             theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-            facet_wrap(~sample, ncol = 4)
+            facet_wrap(~sample, ncol = f.ncol)
       ggsave(p.sense, file = paste0(fig.base, ".pdf"), width = fig.width, height = fig.height)
       ggsave(p.sense, file = paste0(fig.base, ".png"), width = fig.width, height = fig.height, dpi = 300)
 
       p.antisense = ggplot(data = test.antisense.df, aes(x = position, y = antisense)) +
             geom_bar(stat = "identity") +
-            xlab("") + ylab("Mean count") +
+            labs(title = paste0(fig.title, " - antisense read position distribution (20 bp windows)"),
+                 x = "", y = "Mean count") +
             scale_y_continuous(labels = comma) +
             theme_bw() + small.font() +
             theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-            facet_wrap(~sample, ncol = 4)
+            facet_wrap(~sample, ncol = f.ncol)
       ggsave(p.antisense, file = paste0(fig.base, "_AS.pdf"), width = fig.width, height = fig.height)
       ggsave(p.antisense, file = paste0(fig.base, "_AS.png"), width = fig.width, height = fig.height, dpi = 300)
       print(paste("saved:", fig.base, Sys.time()))
 }
 
-position.plot(tRNA.dis.all.df, file.path(dir.fig, "Figure_06.tRNA_pos_barplot"))
-position.plot(snoRNA.dis.all.df, file.path(dir.fig, "Figure_06.snoRNA_pos_barplot"))
+position.plot(tRNA.dis.all.df, file.path(dir.fig, "Figure_06.tRNA_pos_barplot"), "tRNA")
+position.plot(snoRNA.dis.all.df, file.path(dir.fig, "Figure_06.snoRNA_pos_barplot"), "snoRNA")
