@@ -103,7 +103,7 @@ desc.rules <- list(
   list(re = "^Figure_04[a-e]\\..*\\.(pdf|png)$", d = "Annotation count / percentage barplots (step 04)"),
   list(re = "^Figure_05a\\..*_size_barplot\\.(pdf|png)$", d = "Per-class read-size barplots, unique + all reads (step 05)"),
   list(re = "^Figure_05b\\..*_size_barplot\\.percentage\\.(pdf|png)$", d = "Per-class read-size percentage barplots, unique + all reads (step 05)"),
-  list(re = "^Figure_06\\.piRNA_vs_(tRNA|snoRNA)_pos_barplot(_AS)?\\.(pdf|png)$", d = "Position-distribution of piRNA reads over tRNA/snoRNA gene windows, unique + all reads (step 06)"),
+  list(re = "^Figure_06\\.piRNA_vs_(tRNA|snoRNA)_pos_barplot(_AS)?\\.(pdf|png)$", d = "Position-distribution of piRNA reads over tRNA/snoRNA gene windows; _AS = opposite-strand (antisense) panel, unique + all reads (step 06)"),
   list(re = "^Figure_06\\.piRNA_overlap_summary\\.(pdf|png)$", d = "Percentage of piRNA reads overlapping snoRNA/tRNA genes (sense/antisense/none) (step 06)"),
   list(re = "^Figure_s01a_overlap_rules_composition\\.(pdf|png)$", d = "Overlap-rule annotation composition (step s01)"),
   list(re = "^Figure_s01b_overlap_rules_category_size\\.(pdf|png)$", d = "Overlap-rule per-category read-size distributions (step s01)"),

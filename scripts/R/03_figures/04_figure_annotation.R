@@ -35,9 +35,9 @@ class.map = c(read = "read.annotation",
               tRNA = "tRNA.annotation")
 class.list = names(class.map)
 
-read.levels = c("matmiRNA", "snoRNA", "piRNA", "tRNA", "RM", "refGene.NM.exon",
-                "refGene.NM.intron", "lincRNA.exon", "AS.matmiRNA", "AS.snoRNA",
-                "AS.piRNA", "AS.tRNA", "AS.RM", "AS.refGene.NM.exon",
+read.levels = c("matmiRNA", "piRNA", "snoRNA", "tRNA", "RM", "refGene.NM.exon",
+                "refGene.NM.intron", "lincRNA.exon", "AS.matmiRNA", "AS.piRNA",
+                "AS.snoRNA", "AS.tRNA", "AS.RM", "AS.refGene.NM.exon",
                 "AS.refGene.NM.intron", "AS.lincRNA.exon", "other")
 region.levels = c("CDS", "5UTR", "3UTR", "intron", "up1k", "down1k", "RM",
                   "AS.CDS", "AS.5UTR", "AS.3UTR", "AS.intron", "AS.up1k",

@@ -3,19 +3,22 @@
 ## This script tests whether piRNA-annotated reads are degradation products of
 ## tRNA/snoRNA genes (step 06). Reads come from the step-2 annotated objects
 ## (rdata/*.bam.annotated.gr.RData in the strategy output directory); only reads
-## annotated as piRNA (type "piRNA", sense to a piRNA locus) or AS.piRNA
-## (type "AS.piRNA", antisense annotation) are used.
+## annotated as piRNA (type "piRNA", sense to a piRNA locus) are used.
 ## With the piRNA > snoRNA annotation priority (step 02), piRNA-annotated reads
 ## may overlap snoRNA genes on the same strand, so their position profiles over
 ## tRNA and snoRNA gene bodies reveal whether they look like degradation
 ## fragments of those genes.
 ## For each tRNA/snoRNA gene a 21 bp window is slid in 1 bp steps along the gene
 ## body, and the mean read count per window position is plotted per sample.
+## The sense panel counts piRNA reads on the same strand as the gene, the
+## antisense panel piRNA reads on the opposite strand (AS.piRNA reads are not
+## used for the position profiles).
 ## Both read flavors are counted:
 ##   all reads    : weighted by 'count' (redundant reads)
 ##   unique reads : each non-redundant read counted once
-## A summary figure reports the % of piRNA-annotated reads that overlap
-## snoRNA (sense/antisense), tRNA (sense/antisense) genes or neither.
+## A summary figure reports the % of piRNA reads that overlap snoRNA
+## (sense/antisense), tRNA (sense/antisense) genes or neither; only reads
+## annotated as piRNA are included (AS.piRNA reads are excluded).
 ##
 ## Outputs (step 06):
 ##   figures/Figure_06.piRNA_vs_tRNA_pos_barplot(.pdf/.png) + _AS
@@ -61,10 +64,10 @@ sliding.windows = function(gr){
 }
 
 ## ---- sum the weighted count of reads overlapping each window -----------------
-weighted.counts = function(wins, reads, cnt){
+weighted.counts = function(wins, reads, cnt, ignore.strand = TRUE){
       out = integer(length(wins))
       if(length(reads) > 0){
-            ol = findOverlaps(wins, reads, type = "any", ignore.strand = TRUE)
+            ol = findOverlaps(wins, reads, type = "any", ignore.strand = ignore.strand)
             cs = rowsum(cnt[subjectHits(ol)], queryHits(ol))
             out[as.integer(rownames(cs))] = cs[, 1]
       }
@@ -84,6 +87,12 @@ snoRNA.20bp.gr = sliding.windows(snoRNA.gr)
 save(snoRNA.20bp.gr, file = file.path(dir.rdata, "snoRNA.20bp.gr.RData"))
 print(paste("snoRNA windows:", length(snoRNA.20bp.gr)))
 
+## ---- opposite-strand copies of the gene windows (for antisense counts) --------
+tRNA.anti.20bp.gr = tRNA.20bp.gr
+strand(tRNA.anti.20bp.gr) = ifelse(as.character(strand(tRNA.anti.20bp.gr)) == "+", "-", "+")
+snoRNA.anti.20bp.gr = snoRNA.20bp.gr
+strand(snoRNA.anti.20bp.gr) = ifelse(as.character(strand(snoRNA.anti.20bp.gr)) == "+", "-", "+")
+
 ## ---- piRNA reads per window, per sample, for both read flavors ----------------
 piRNA_on_tRNA.dis.all.df = NULL
 piRNA_on_snoRNA.dis.all.df = NULL
@@ -98,67 +107,72 @@ for(i in seq(along = files)){
       print(paste("Now is processing ...", sample.name, Sys.time()))
       load(file.name)
       cnt = mcols(reads.bam.annotated.gr)$count
-      pirna.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type %in% c("piRNA", "AS.piRNA")]
       pirna_sense.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "piRNA"]
-      pirna_AS.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "AS.piRNA"]
 
-      ## piRNA reads on tRNA windows
+      ## piRNA reads (sense to a piRNA locus) on tRNA windows; sense = same
+      ## strand as the gene, antisense = opposite strand
+      pirna.cnt = cnt[reads.bam.annotated.gr$type == "piRNA"]
       tRNA.base = as.data.frame(tRNA.20bp.gr)
       tRNA.all = tRNA.base
-      tRNA.all$sense = weighted.counts(tRNA.20bp.gr, pirna_sense.gr,
-                                                cnt[reads.bam.annotated.gr$type == "piRNA"])
-      tRNA.all$antisense = weighted.counts(tRNA.20bp.gr, pirna_AS.gr,
-                                                  cnt[reads.bam.annotated.gr$type == "AS.piRNA"])
+      tRNA.all$sense = weighted.counts(tRNA.20bp.gr, pirna_sense.gr, pirna.cnt,
+                                                 ignore.strand = FALSE)
+      tRNA.all$antisense = weighted.counts(tRNA.anti.20bp.gr, pirna_sense.gr, pirna.cnt,
+                                                     ignore.strand = FALSE)
       tRNA.all$sample = sample.name
       tRNA.all$flavor = "all reads"
       tRNA.uniq = tRNA.base
       tRNA.uniq$sense = weighted.counts(tRNA.20bp.gr, pirna_sense.gr,
-                                                rep(1, length(pirna_sense.gr)))
-      tRNA.uniq$antisense = weighted.counts(tRNA.20bp.gr, pirna_AS.gr,
-                                                    rep(1, length(pirna_AS.gr)))
+                                                  rep(1, length(pirna_sense.gr)),
+                                                  ignore.strand = FALSE)
+      tRNA.uniq$antisense = weighted.counts(tRNA.anti.20bp.gr, pirna_sense.gr,
+                                                      rep(1, length(pirna_sense.gr)),
+                                                      ignore.strand = FALSE)
       tRNA.uniq$sample = sample.name
       tRNA.uniq$flavor = "unique reads"
       piRNA_on_tRNA.dis.all.df = rbind(piRNA_on_tRNA.dis.all.df, tRNA.all, tRNA.uniq)
 
-      ## piRNA reads on snoRNA windows
+      ## piRNA reads (sense to a piRNA locus) on snoRNA windows; sense = same
+      ## strand as the gene, antisense = opposite strand
       snoRNA.base = as.data.frame(snoRNA.20bp.gr)
       snoRNA.all = snoRNA.base
-      snoRNA.all$sense = weighted.counts(snoRNA.20bp.gr, pirna_sense.gr,
-                                                  cnt[reads.bam.annotated.gr$type == "piRNA"])
-      snoRNA.all$antisense = weighted.counts(snoRNA.20bp.gr, pirna_AS.gr,
-                                                      cnt[reads.bam.annotated.gr$type == "AS.piRNA"])
+      snoRNA.all$sense = weighted.counts(snoRNA.20bp.gr, pirna_sense.gr, pirna.cnt,
+                                                  ignore.strand = FALSE)
+      snoRNA.all$antisense = weighted.counts(snoRNA.anti.20bp.gr, pirna_sense.gr, pirna.cnt,
+                                                      ignore.strand = FALSE)
       snoRNA.all$sample = sample.name
       snoRNA.all$flavor = "all reads"
       snoRNA.uniq = snoRNA.base
       snoRNA.uniq$sense = weighted.counts(snoRNA.20bp.gr, pirna_sense.gr,
-                                                  rep(1, length(pirna_sense.gr)))
-      snoRNA.uniq$antisense = weighted.counts(snoRNA.20bp.gr, pirna_AS.gr,
-                                                      rep(1, length(pirna_AS.gr)))
+                                                  rep(1, length(pirna_sense.gr)),
+                                                  ignore.strand = FALSE)
+      snoRNA.uniq$antisense = weighted.counts(snoRNA.anti.20bp.gr, pirna_sense.gr,
+                                                      rep(1, length(pirna_sense.gr)),
+                                                      ignore.strand = FALSE)
       snoRNA.uniq$sample = sample.name
       snoRNA.uniq$flavor = "unique reads"
       piRNA_on_snoRNA.dis.all.df = rbind(piRNA_on_snoRNA.dis.all.df, snoRNA.all, snoRNA.uniq)
 
       ## ---- piRNA overlap summary (snoRNA/tRNA sense or antisense, or neither) ----
-      cat = rep("none", length(pirna.gr))
-      if(length(pirna.gr) > 0){
-            sno.sense = unique(queryHits(findOverlaps(pirna.gr, snoRNA.gr, ignore.strand = FALSE)))
+      cat = rep("none", length(pirna_sense.gr))
+      if(length(pirna_sense.gr) > 0){
+            sno.sense = unique(queryHits(findOverlaps(pirna_sense.gr, snoRNA.gr, ignore.strand = FALSE)))
             cat[sno.sense] = "snoRNA_sense"
-            sno.anti = setdiff(unique(queryHits(findOverlaps(pirna.gr, snoRNA.gr, ignore.strand = TRUE))), sno.sense)
+            sno.anti = setdiff(unique(queryHits(findOverlaps(pirna_sense.gr, snoRNA.gr, ignore.strand = TRUE))), sno.sense)
             cat[sno.anti] = "snoRNA_antisense"
             remain = which(cat == "none")
             if(length(remain)){
-                  trna.sense = unique(queryHits(findOverlaps(pirna.gr[remain], tRNA.gr, ignore.strand = FALSE)))
+                  trna.sense = unique(queryHits(findOverlaps(pirna_sense.gr[remain], tRNA.gr, ignore.strand = FALSE)))
                   cat[remain[trna.sense]] = "tRNA_sense"
             }
             remain = which(cat == "none")
             if(length(remain)){
-                  trna.anti = unique(queryHits(findOverlaps(pirna.gr[remain], tRNA.gr, ignore.strand = TRUE)))
+                  trna.anti = unique(queryHits(findOverlaps(pirna_sense.gr[remain], tRNA.gr, ignore.strand = TRUE)))
                   cat[remain[trna.anti]] = "tRNA_antisense"
             }
       }
       ov = data.table(sample = sample.name, category = factor(cat, levels = c("snoRNA_sense", "snoRNA_antisense",
                         "tRNA_sense", "tRNA_antisense", "none")),
-                      count = as.numeric(pirna.gr$count))
+                      count = as.numeric(pirna_sense.gr$count))
       ov.sum = ov[, .(n_unique = as.numeric(.N), n_reads = base::sum(count)), by = .(sample, category)]
       ov.sum[, pct_unique := round(100 * n_unique / base::sum(n_unique), 2)]
       ov.sum[, pct_reads := round(100 * n_reads / base::sum(n_reads), 2)]
@@ -193,7 +207,7 @@ position.plot = function(dis.all.df, fig.base, fig.title){
 
       p.antisense = ggplot(data = test.antisense.df, aes(x = position, y = antisense)) +
             geom_bar(stat = "identity") +
-            labs(title = paste0(fig.title, " - AS.piRNA reads, antisense position distribution (20 bp windows)"),
+            labs(title = paste0(fig.title, " - piRNA reads, antisense position distribution (20 bp windows)"),
                  x = "", y = "Mean count") +
             scale_y_continuous(labels = comma) +
             theme_bw() + small.font() +
@@ -227,7 +241,7 @@ fd = fig.dims(sample.num, 2, per.h = 2.7)
 p.summary = ggplot(ov.long, aes(x = sample, y = pct, fill = category)) +
       geom_bar(stat = "identity", width = 0.7) +
       scale_fill_manual(values = cat.cols, name = "piRNA overlap") +
-      labs(title = "Percentage of piRNA-annotated reads overlapping snoRNA/tRNA genes",
+      labs(title = "Percentage of piRNA reads overlapping snoRNA/tRNA genes",
            x = NULL, y = "% of piRNA reads") +
       theme_bw() + small.font() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
