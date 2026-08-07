@@ -78,10 +78,12 @@ for(cat in c("matmiRNA", "snoRNA", "tRNA", "piRNA")){
   w = NULL
   if (length(samples) == 2){
     cs = dcast(sub, locus ~ sample, value.var = "n_reads", fill = 0)
-    setnames(cs, samples, c("v1", "v2"))
-    cs[, v1 := log10(v1 + 1)][, v2 := log10(v2 + 1)]
-    rho = suppressWarnings(cor(cs$v1, cs$v2, method = "spearman"))
-    w = suppressWarnings(wilcox.test(cs$v1, cs$v2, paired = TRUE))
+    if (all(samples %in% names(cs))){
+      setnames(cs, samples, c("v1", "v2"))
+      cs[, v1 := log10(v1 + 1)][, v2 := log10(v2 + 1)]
+      rho = suppressWarnings(cor(cs$v1, cs$v2, method = "spearman"))
+      w = suppressWarnings(wilcox.test(cs$v1, cs$v2, paired = TRUE))
+    }
   }
   for(s in samples){
     x = sub[sample == s]
