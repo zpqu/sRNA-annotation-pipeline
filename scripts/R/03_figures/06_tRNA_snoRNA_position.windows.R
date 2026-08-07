@@ -159,7 +159,7 @@ for(i in seq(along = files)){
       ov = data.table(sample = sample.name, category = factor(cat, levels = c("snoRNA_sense", "snoRNA_antisense",
                         "tRNA_sense", "tRNA_antisense", "none")),
                       count = as.numeric(pirna.gr$count))
-      ov.sum = ov[, .(n_unique = .N, n_reads = base::sum(count)), by = category]
+      ov.sum = ov[, .(n_unique = as.numeric(.N), n_reads = base::sum(count)), by = .(sample, category)]
       ov.sum[, pct_unique := round(100 * n_unique / base::sum(n_unique), 2)]
       ov.sum[, pct_reads := round(100 * n_reads / base::sum(n_reads), 2)]
       piRNA.overlap.tab = rbind(piRNA.overlap.tab, ov.sum)
@@ -211,7 +211,8 @@ position.plot(piRNA_on_snoRNA.dis.all.df, file.path(dir.fig, "Figure_06.piRNA_vs
 ov.long = melt(piRNA.overlap.tab[, .(sample, category, n_unique, n_reads)],
                id.vars = c("sample", "category"),
                measure.vars = c("n_unique", "n_reads"),
-               variable.name = "flavor", value.name = "n")
+               variable.name = "flavor", value.name = "n",
+               variable.factor = FALSE)
 ov.long[flavor == "n_unique", flavor := "unique reads"]
 ov.long[flavor == "n_reads", flavor := "all reads"]
 ov.long[, flavor := factor(flavor, levels = c("unique reads", "all reads"))]
