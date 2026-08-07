@@ -108,49 +108,53 @@ for(i in seq(along = files)){
       load(file.name)
       cnt = mcols(reads.bam.annotated.gr)$count
       pirna_sense.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "piRNA"]
+      pirna.cnt = cnt[reads.bam.annotated.gr$type == "piRNA"]
 
       ## piRNA reads (sense to a piRNA locus) on tRNA windows; sense = same
       ## strand as the gene, antisense = opposite strand
-      pirna.cnt = cnt[reads.bam.annotated.gr$type == "piRNA"]
-      tRNA.base = as.data.frame(tRNA.20bp.gr)
-      tRNA.all = tRNA.base
-      tRNA.all$sense = weighted.counts(tRNA.20bp.gr, pirna_sense.gr, pirna.cnt,
-                                                 ignore.strand = FALSE)
-      tRNA.all$antisense = weighted.counts(tRNA.anti.20bp.gr, pirna_sense.gr, pirna.cnt,
-                                                     ignore.strand = FALSE)
-      tRNA.all$sample = sample.name
-      tRNA.all$flavor = "all reads"
-      tRNA.uniq = tRNA.base
-      tRNA.uniq$sense = weighted.counts(tRNA.20bp.gr, pirna_sense.gr,
-                                                  rep(1, length(pirna_sense.gr)),
-                                                  ignore.strand = FALSE)
-      tRNA.uniq$antisense = weighted.counts(tRNA.anti.20bp.gr, pirna_sense.gr,
-                                                      rep(1, length(pirna_sense.gr)),
-                                                      ignore.strand = FALSE)
-      tRNA.uniq$sample = sample.name
-      tRNA.uniq$flavor = "unique reads"
-      piRNA_on_tRNA.dis.all.df = rbind(piRNA_on_tRNA.dis.all.df, tRNA.all, tRNA.uniq)
+      if(length(tRNA.20bp.gr) > 0){
+            tRNA.base = as.data.frame(tRNA.20bp.gr)
+            tRNA.all = tRNA.base
+            tRNA.all$sense = weighted.counts(tRNA.20bp.gr, pirna_sense.gr, pirna.cnt,
+                                                       ignore.strand = FALSE)
+            tRNA.all$antisense = weighted.counts(tRNA.anti.20bp.gr, pirna_sense.gr, pirna.cnt,
+                                                           ignore.strand = FALSE)
+            tRNA.all$sample = sample.name
+            tRNA.all$flavor = "all reads"
+            tRNA.uniq = tRNA.base
+            tRNA.uniq$sense = weighted.counts(tRNA.20bp.gr, pirna_sense.gr,
+                                                        rep(1, length(pirna_sense.gr)),
+                                                        ignore.strand = FALSE)
+            tRNA.uniq$antisense = weighted.counts(tRNA.anti.20bp.gr, pirna_sense.gr,
+                                                            rep(1, length(pirna_sense.gr)),
+                                                            ignore.strand = FALSE)
+            tRNA.uniq$sample = sample.name
+            tRNA.uniq$flavor = "unique reads"
+            piRNA_on_tRNA.dis.all.df = rbind(piRNA_on_tRNA.dis.all.df, tRNA.all, tRNA.uniq)
+      }
 
       ## piRNA reads (sense to a piRNA locus) on snoRNA windows; sense = same
       ## strand as the gene, antisense = opposite strand
-      snoRNA.base = as.data.frame(snoRNA.20bp.gr)
-      snoRNA.all = snoRNA.base
-      snoRNA.all$sense = weighted.counts(snoRNA.20bp.gr, pirna_sense.gr, pirna.cnt,
-                                                  ignore.strand = FALSE)
-      snoRNA.all$antisense = weighted.counts(snoRNA.anti.20bp.gr, pirna_sense.gr, pirna.cnt,
-                                                      ignore.strand = FALSE)
-      snoRNA.all$sample = sample.name
-      snoRNA.all$flavor = "all reads"
-      snoRNA.uniq = snoRNA.base
-      snoRNA.uniq$sense = weighted.counts(snoRNA.20bp.gr, pirna_sense.gr,
-                                                  rep(1, length(pirna_sense.gr)),
-                                                  ignore.strand = FALSE)
-      snoRNA.uniq$antisense = weighted.counts(snoRNA.anti.20bp.gr, pirna_sense.gr,
-                                                      rep(1, length(pirna_sense.gr)),
-                                                      ignore.strand = FALSE)
-      snoRNA.uniq$sample = sample.name
-      snoRNA.uniq$flavor = "unique reads"
-      piRNA_on_snoRNA.dis.all.df = rbind(piRNA_on_snoRNA.dis.all.df, snoRNA.all, snoRNA.uniq)
+      if(length(snoRNA.20bp.gr) > 0){
+            snoRNA.base = as.data.frame(snoRNA.20bp.gr)
+            snoRNA.all = snoRNA.base
+            snoRNA.all$sense = weighted.counts(snoRNA.20bp.gr, pirna_sense.gr, pirna.cnt,
+                                                        ignore.strand = FALSE)
+            snoRNA.all$antisense = weighted.counts(snoRNA.anti.20bp.gr, pirna_sense.gr, pirna.cnt,
+                                                            ignore.strand = FALSE)
+            snoRNA.all$sample = sample.name
+            snoRNA.all$flavor = "all reads"
+            snoRNA.uniq = snoRNA.base
+            snoRNA.uniq$sense = weighted.counts(snoRNA.20bp.gr, pirna_sense.gr,
+                                                        rep(1, length(pirna_sense.gr)),
+                                                        ignore.strand = FALSE)
+            snoRNA.uniq$antisense = weighted.counts(snoRNA.anti.20bp.gr, pirna_sense.gr,
+                                                            rep(1, length(pirna_sense.gr)),
+                                                            ignore.strand = FALSE)
+            snoRNA.uniq$sample = sample.name
+            snoRNA.uniq$flavor = "unique reads"
+            piRNA_on_snoRNA.dis.all.df = rbind(piRNA_on_snoRNA.dis.all.df, snoRNA.all, snoRNA.uniq)
+      }
 
       ## ---- piRNA overlap summary (snoRNA/tRNA sense or antisense, or neither) ----
       cat = rep("none", length(pirna_sense.gr))

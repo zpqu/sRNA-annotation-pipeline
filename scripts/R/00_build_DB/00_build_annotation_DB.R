@@ -83,7 +83,7 @@ tx_id     <- gtf$transcript_id
 gene_name <- gtf$gene_name
 is_NM     <- grepl("^NM_", tx_id)
 is_NR     <- grepl("^NR_", tx_id)
-is_snord  <- !is.na(gene_name) & grepl("^Snor", gene_name)   # Snord*/Snora* small nucleolar RNAs
+is_snord  <- !is.na(gene_name) & grepl("^Snor", gene_name, ignore.case = TRUE)  # Snord*/Snora* (mouse), SNORD*/SNORA* (human)
 
 ## --- NM_ (protein coding): exon / CDS / 5UTR / 3UTR ---
 refGene.NM.exon.gr <- reorder.mcols(gtf[is_NM & gtf$type == "exon"])
