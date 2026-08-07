@@ -130,8 +130,8 @@ writes shared step-1 results to `output/comparison/` and per-strategy subfolders
 | 02 | `02_annotation/02_annotation_smallRNA.R` | Annotates each read to a single feature class, sense/antisense; count matrices + per-read CSV (`Table_02a/b`, `Table_02_<sample>_unique_reads_annotation.csv`). |
 | 03 | `03_figures/03_abundance_by_category.R` | Abundance/per-locus analyses for mature miRNAs (`Table_03a/b`, `Figure_03a–c`). |
 | 04 | `03_figures/04_figure_annotation.R` | Annotation-composition barplots (`Figure_04a–e`). |
-| 05 | `03_figures/05_figure_size.R` | Read-size distributions (`Figure_05a/b`). |
-| 06 | `03_figures/06_tRNA_snoRNA_position.windows.R` | Positional profiles over tRNA/snoRNA genes (`Figure_06`). |
+| 05 | `03_figures/05_figure_size.R` | Read-size distributions for unique + all reads (`Figure_05a/b`). |
+| 06 | `03_figures/06_tRNA_snoRNA_position.windows.R` | Positional profiles over tRNA/snoRNA genes for unique + all reads (`Figure_06`). |
 | s01 | `03_figures/s01_compare_overlap_rules.R` | (Comparison mode only) quantifies how the three rules differ (`Table_s01a–e`, `Figure_s01a/b`). |
 | 10 | `04_summary/10_pipeline_summary.R` | Writes `pipeline_summary.md` and runs automated sanity checks (`Table_10`). |
 
