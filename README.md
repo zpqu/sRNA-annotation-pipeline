@@ -131,7 +131,7 @@ writes shared step-1 results to `output/comparison/` and per-strategy subfolders
 | 03 | `03_figures/03_abundance_by_category.R` | Abundance/per-locus analyses for mature miRNAs (`Table_03a/b`, `Figure_03a–c`). |
 | 04 | `03_figures/04_figure_annotation.R` | Annotation-composition barplots (`Figure_04a–e`). |
 | 05 | `03_figures/05_figure_size.R` | Read-size distributions for unique + all reads (`Figure_05a/b`). |
-| 06 | `03_figures/06_tRNA_snoRNA_position.windows.R` | Positional profiles over tRNA/snoRNA genes for unique + all reads (`Figure_06`). |
+| 06 | `03_figures/06_tRNA_snoRNA_position.windows.R` | Positional profiles of piRNA reads over tRNA/snoRNA genes + piRNA overlap summary, unique + all reads (`Figure_06`). |
 | s01 | `03_figures/s01_compare_overlap_rules.R` | (Comparison mode only) quantifies how the three rules differ (`Table_s01a–e`, `Figure_s01a/b`). |
 | 10 | `04_summary/10_pipeline_summary.R` | Writes `pipeline_summary.md` and runs automated sanity checks (`Table_10`). |
 
@@ -144,7 +144,8 @@ Everything is written below `output/` (or `output/comparison/`), organised into
   `Table_03a/b`, `Table_s01a–e`, `Table_10`), per-sample
   annotation tables (`Table_02_<sample>_unique_reads_annotation.csv`).
 - `figures/` — PDF/PNG figures (`Figure_01`, `Figure_03a–c`, `Figure_04a–e`,
-  `Figure_05a/b`, `Figure_06`, `Figure_s01a/b`).
+  `Figure_05a/b`, `Figure_06.piRNA_vs_tRNA|snoRNA_pos_barplot`,
+  `Figure_06.piRNA_overlap_summary`, `Figure_s01a/b`).
 - `rdata/` — intermediate R objects (reads GRanges, annotation results,
   position-window counts) for downstream analysis.
 - `pipeline_summary.md` — end-of-pipeline report: run parameters, inventory of

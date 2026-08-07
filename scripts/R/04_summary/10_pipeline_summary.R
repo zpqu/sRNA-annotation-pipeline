@@ -91,18 +91,20 @@ desc.rules <- list(
   list(re = "^Table_03b_per_locus_abundance\\.csv$", d = "Per-locus read abundance, long format"),
   ## step 10 (this script)
   list(re = "^Table_10_sanity_checks\\.csv$", d = "Pipeline sanity-check results (step 10)"),
+  list(re = "^Table_06_piRNA_overlap_summary\\.csv$", d = "piRNA reads overlapping snoRNA/tRNA genes (sense/antisense/none), unique + all reads (step 06)"),
   ## rdata
   list(re = sprintf("^(%s)\\.bam\\.gr\\.RData$", SAM), d = "All aligned reads (GRanges)"),
   list(re = sprintf("^(%s)\\.bam\\.unique\\.gr\\.RData$", SAM), d = "Non-redundant unique reads with 'count' (expression) column"),
   list(re = sprintf("^(%s)\\.bam\\.annotated\\.gr\\.RData$", SAM), d = "Annotated reads (category 'type', gene context 'region', 'count', 'feature.id', 'n_features')"),
   list(re = "^(snoRNA|tRNA)\\.20bp\\.gr\\.RData$", d = "20 bp sliding windows along each gene body (step 06)"),
-  list(re = "^(snoRNA|tRNA)\\.20bp\\.dis\\.all\\.df\\.RData$", d = "Read counts per window position, unique + all reads (step 06)"),
+  list(re = "^piRNA_on_(snoRNA|tRNA)\\.20bp\\.dis\\.all\\.df\\.RData$", d = "piRNA read counts per window position, unique + all reads (step 06)"),
   ## figures
   list(re = "^Figure_01\\.read_size_vs_count\\.(pdf|png)$", d = "Read size / count distribution figure, faceted by sample (step 01)"),
   list(re = "^Figure_04[a-e]\\..*\\.(pdf|png)$", d = "Annotation count / percentage barplots (step 04)"),
   list(re = "^Figure_05a\\..*_size_barplot\\.(pdf|png)$", d = "Per-class read-size barplots, unique + all reads (step 05)"),
   list(re = "^Figure_05b\\..*_size_barplot\\.percentage\\.(pdf|png)$", d = "Per-class read-size percentage barplots, unique + all reads (step 05)"),
-  list(re = "^Figure_06\\.(tRNA|snoRNA)_pos_barplot(_AS)?\\.(pdf|png)$", d = "Position-distribution barplots for tRNA/snoRNA genes, unique + all reads (step 06)"),
+  list(re = "^Figure_06\\.piRNA_vs_(tRNA|snoRNA)_pos_barplot(_AS)?\\.(pdf|png)$", d = "Position-distribution of piRNA reads over tRNA/snoRNA gene windows, unique + all reads (step 06)"),
+  list(re = "^Figure_06\\.piRNA_overlap_summary\\.(pdf|png)$", d = "Percentage of piRNA reads overlapping snoRNA/tRNA genes (sense/antisense/none) (step 06)"),
   list(re = "^Figure_s01a_overlap_rules_composition\\.(pdf|png)$", d = "Overlap-rule annotation composition (step s01)"),
   list(re = "^Figure_s01b_overlap_rules_category_size\\.(pdf|png)$", d = "Overlap-rule per-category read-size distributions (step s01)"),
   list(re = "^Figure_03a_per_locus_distribution\\.(pdf|png)$", d = "Per-locus log10 abundance distribution per category (step 03)"),

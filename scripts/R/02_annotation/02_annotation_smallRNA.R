@@ -10,8 +10,13 @@
 ##                      containment; captures long reads spanning a small feature)
 ##   any             : any overlap (>= 1 bp) between read and feature
 ## Antisense annotation is always type="any" with ignore.strand = TRUE.
-## Priority: matmiRNA>snoRNA>piRNA>tRNA>RM>refGene_NM_exon>refGene_NM_intron>lincRNA
-## >antisense_tRNA>antisense_RM>antisense_NM_exon>antisense_NM_intron>antisense_lincRNA
+## Priority: matmiRNA>piRNA>snoRNA>tRNA>RM>refGene_NM_exon>refGene_NM_intron>lincRNA
+## >antisense_matmiRNA>antisense_piRNA>antisense_snoRNA>antisense_tRNA>antisense_RM
+## >antisense_NM_exon>antisense_NM_intron>antisense_lincRNA
+## NOTE: piRNA is deliberately ranked above snoRNA so that reads overlapping both a
+## piRNA locus and a snoRNA gene are annotated as piRNA - this lets downstream
+## analyses (step 06) test whether piRNA-annotated reads are degradation products
+## of snoRNA/tRNA genes.
 ## Reads are annotated as non-redundant unique reads (chr/start/end/strand).
 ## Outputs are written to the directory resolved by the shared bootstrap
 ## (scripts/R/lib/init.R; output/ for a single-strategy run,
@@ -51,7 +56,7 @@ load(file.path(db.dir, "refGene.NM.up1k.grl.RData"))
 load(file.path(db.dir, "refGene.NM.down1k.grl.RData"))
 
 ####make genomic feature list or gene feature list
-genomicFeature.id = c("matmiRNA.gr", "snoRNA.gr", "piRNA.gr",
+genomicFeature.id = c("matmiRNA.gr", "piRNA.gr", "snoRNA.gr",
 		  "tRNA.gr", "RM.gr", "refGene.NM.exon.grl",
 		  "refGene.NM.intron.grl",
 		  "lincRNA.exon.grl")
@@ -183,8 +188,8 @@ for(i in seq(along = files)){
       test.bam.new.gr = test.bam.gr
       test.bam.new.gr = test.bam.new.gr[-(1:length(test.bam.new.gr))]
       test.other.gr = NULL
-      ###miRNA[0]>snoRNA[1]>piRNA[2]>tRNA[3]>RM_refGeneNM[4]>RM[5]>refGene_NM_exon[6]>refGene_NM_intron[7]>lincRNA[8]
-      ### >antisense_tRNA>RM_refGeneNM>antisense_RM>antisense_NM_exon>antisense_NM_intron>anitsense_lincRNA
+      ###miRNA[0]>piRNA[1]>snoRNA[2]>tRNA[3]>RM_refGeneNM[4]>RM[5]>refGene_NM_exon[6]>refGene_NM_intron[7]>lincRNA[8]
+      ### >antisense_matmiRNA>antisense_piRNA>antisense_snoRNA>antisense_tRNA>antisense_RM_refGeneNM>antisense_RM>antisense_NM_exon>antisense_NM_intron>anitsense_lincRNA
 
       ##sense
       for(j in 1:length(genomicFeature.id)){
