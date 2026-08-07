@@ -132,7 +132,7 @@ position.plot = function(dis.all.df, fig.base, fig.title){
       if(is.null(dis.all.df) || nrow(dis.all.df) == 0) return(NULL)
       dis.all.df$flavor = factor(dis.all.df$flavor, levels = c("unique reads", "all reads"))
       sample.num = length(unique(dis.all.df$sample))
-      fd = fig.dims(2 * sample.num, 2, per.h = (180 / 2) * 1.15 / 25.4)
+      fd = fig.dims(sample.num, 2, per.h = 4.1)
       fig.width  = fd["width"]
       fig.height = fd["height"]
       test.sense.df = aggregate(sense ~ position + sample + flavor, data = dis.all.df, mean)

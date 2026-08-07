@@ -45,7 +45,7 @@ x.breaks = seq(ceiling(min(size.levels) / 5) * 5, max(size.levels), by = 5)
 if (x.breaks[1] > min(size.levels)) x.breaks = c(min(size.levels), x.breaks)
 
 sample.num = length(unique(all.read.df$sample))
-fig.d = fig.dims(2 * sample.num, 2, per.h = (180 / 2) * 1.15 / 25.4)
+fig.d = fig.dims(sample.num, 2, per.h = 4.1)
 fig.width  = fig.d["width"]
 fig.height = fig.d["height"]
 for(j in 1:length(class.list)){
