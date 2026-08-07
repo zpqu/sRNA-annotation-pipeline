@@ -5,9 +5,12 @@
 ## Features for the reference genome set in the shared bootstrap (init.R) are used. Reads are
 ## taken from the step-2 annotated objects (rdata/*.bam.annotated.gr.RData in the
 ## strategy output directory), "AS.tRNA", "snoRNA", "AS.snoRNA", ...) and the
-## non-redundant read 'count'. Window counts are weighted by 'count'. For each
-## gene a 21 bp window is slid in 1 bp steps along the gene body, and the mean
-## weighted read count per window position is plotted per sample.
+## non-redundant read 'count'. Windows are counted for both read flavors:
+##   all reads    : weighted by 'count' (redundant reads)
+##   unique reads : each non-redundant read counted once
+## For each gene a 21 bp window is slid in 1 bp steps along the gene body, and the mean
+## read count per window position is plotted per sample, faceted as samples (rows)
+## x flavor (columns) in the same style as Figure_04.
 
 suppressMessages(library(GenomicRanges))
 suppressMessages(library(GenomicAlignments))
@@ -66,7 +69,7 @@ snoRNA.20bp.gr = sliding.windows(snoRNA.gr)
 save(snoRNA.20bp.gr, file = file.path(dir.rdata, "snoRNA.20bp.gr.RData"))
 print(paste("snoRNA windows:", length(snoRNA.20bp.gr)))
 
-## ---- count reads per window, per sample --------------------------------------
+## ---- count reads per window, per sample, for both read flavors -------------------
 tRNA.dis.all.df = NULL
 snoRNA.dis.all.df = NULL
 files = list.files(path = dir.rdata, pattern = ".bam.annotated.gr.RData$")
@@ -80,25 +83,45 @@ for(i in seq(along = files)){
       load(file.name)
       cnt = mcols(reads.bam.annotated.gr)$count
 
-      ## tRNA windows
+      ## tRNA windows (all reads: weighted by count; unique reads: each read once)
       test.bam.tRNA.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "tRNA"]
       test.bam.tRNA_AS.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "AS.tRNA"]
-      tRNA.20bp.gr$sense = weighted.counts(tRNA.20bp.gr, test.bam.tRNA.gr,
+      tRNA.base = as.data.frame(tRNA.20bp.gr)
+      tRNA.all = tRNA.base
+      tRNA.all$sense = weighted.counts(tRNA.20bp.gr, test.bam.tRNA.gr,
                                                 cnt[reads.bam.annotated.gr$type == "tRNA"])
-      tRNA.20bp.gr$antisense = weighted.counts(tRNA.20bp.gr, test.bam.tRNA_AS.gr,
-                                                    cnt[reads.bam.annotated.gr$type == "AS.tRNA"])
-      tRNA.20bp.gr$sample = rep(sample.name, length(tRNA.20bp.gr))
-      tRNA.dis.all.df = rbind(tRNA.dis.all.df, as.data.frame(tRNA.20bp.gr))
+      tRNA.all$antisense = weighted.counts(tRNA.20bp.gr, test.bam.tRNA_AS.gr,
+                                                  cnt[reads.bam.annotated.gr$type == "AS.tRNA"])
+      tRNA.all$sample = sample.name
+      tRNA.all$flavor = "all reads"
+      tRNA.uniq = tRNA.base
+      tRNA.uniq$sense = weighted.counts(tRNA.20bp.gr, test.bam.tRNA.gr,
+                                                rep(1, length(test.bam.tRNA.gr)))
+      tRNA.uniq$antisense = weighted.counts(tRNA.20bp.gr, test.bam.tRNA_AS.gr,
+                                                    rep(1, length(test.bam.tRNA_AS.gr)))
+      tRNA.uniq$sample = sample.name
+      tRNA.uniq$flavor = "unique reads"
+      tRNA.dis.all.df = rbind(tRNA.dis.all.df, tRNA.all, tRNA.uniq)
 
       ## snoRNA windows
       test.bam.snoRNA.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "snoRNA"]
       test.bam.snoRNA_AS.gr = reads.bam.annotated.gr[reads.bam.annotated.gr$type == "AS.snoRNA"]
-      snoRNA.20bp.gr$sense = weighted.counts(snoRNA.20bp.gr, test.bam.snoRNA.gr,
+      snoRNA.base = as.data.frame(snoRNA.20bp.gr)
+      snoRNA.all = snoRNA.base
+      snoRNA.all$sense = weighted.counts(snoRNA.20bp.gr, test.bam.snoRNA.gr,
                                                   cnt[reads.bam.annotated.gr$type == "snoRNA"])
-      snoRNA.20bp.gr$antisense = weighted.counts(snoRNA.20bp.gr, test.bam.snoRNA_AS.gr,
+      snoRNA.all$antisense = weighted.counts(snoRNA.20bp.gr, test.bam.snoRNA_AS.gr,
                                                       cnt[reads.bam.annotated.gr$type == "AS.snoRNA"])
-      snoRNA.20bp.gr$sample = rep(sample.name, length(snoRNA.20bp.gr))
-      snoRNA.dis.all.df = rbind(snoRNA.dis.all.df, as.data.frame(snoRNA.20bp.gr))
+      snoRNA.all$sample = sample.name
+      snoRNA.all$flavor = "all reads"
+      snoRNA.uniq = snoRNA.base
+      snoRNA.uniq$sense = weighted.counts(snoRNA.20bp.gr, test.bam.snoRNA.gr,
+                                                  rep(1, length(test.bam.snoRNA.gr)))
+      snoRNA.uniq$antisense = weighted.counts(snoRNA.20bp.gr, test.bam.snoRNA_AS.gr,
+                                                      rep(1, length(test.bam.snoRNA_AS.gr)))
+      snoRNA.uniq$sample = sample.name
+      snoRNA.uniq$flavor = "unique reads"
+      snoRNA.dis.all.df = rbind(snoRNA.dis.all.df, snoRNA.all, snoRNA.uniq)
 }
 
 save(tRNA.dis.all.df, file = file.path(dir.rdata, "tRNA.20bp.dis.all.df.RData"))
@@ -107,13 +130,13 @@ save(snoRNA.dis.all.df, file = file.path(dir.rdata, "snoRNA.20bp.dis.all.df.RDat
 ## ---- plot tRNA ---------------------------------------------------------------
 position.plot = function(dis.all.df, fig.base, fig.title){
       if(is.null(dis.all.df) || nrow(dis.all.df) == 0) return(NULL)
+      dis.all.df$flavor = factor(dis.all.df$flavor, levels = c("unique reads", "all reads"))
       sample.num = length(unique(dis.all.df$sample))
-      f.ncol = if (sample.num <= 8) 2 else 4
-      fd = fig.dims(sample.num, f.ncol, per.h = (180 / f.ncol) * 1.15 / 25.4)
+      fd = fig.dims(2 * sample.num, 2, per.h = (180 / 2) * 1.15 / 25.4)
       fig.width  = fd["width"]
       fig.height = fd["height"]
-      test.sense.df = aggregate(sense ~ position + sample, data = dis.all.df, mean)
-      test.antisense.df = aggregate(antisense ~ position + sample, data = dis.all.df, mean)
+      test.sense.df = aggregate(sense ~ position + sample + flavor, data = dis.all.df, mean)
+      test.antisense.df = aggregate(antisense ~ position + sample + flavor, data = dis.all.df, mean)
 
       p.sense = ggplot(data = test.sense.df, aes(x = position, y = sense)) +
             geom_bar(stat = "identity") +
@@ -122,7 +145,7 @@ position.plot = function(dis.all.df, fig.base, fig.title){
             scale_y_continuous(labels = comma) +
             theme_bw() + small.font() +
             theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-            facet_wrap(~sample, ncol = f.ncol)
+            facet_grid(sample ~ flavor, scales = "free_y")
       ggsave(p.sense, file = paste0(fig.base, ".pdf"), width = fig.width, height = fig.height)
       ggsave(p.sense, file = paste0(fig.base, ".png"), width = fig.width, height = fig.height, dpi = 300)
 
@@ -133,7 +156,7 @@ position.plot = function(dis.all.df, fig.base, fig.title){
             scale_y_continuous(labels = comma) +
             theme_bw() + small.font() +
             theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-            facet_wrap(~sample, ncol = f.ncol)
+            facet_grid(sample ~ flavor, scales = "free_y")
       ggsave(p.antisense, file = paste0(fig.base, "_AS.pdf"), width = fig.width, height = fig.height)
       ggsave(p.antisense, file = paste0(fig.base, "_AS.png"), width = fig.width, height = fig.height, dpi = 300)
       print(paste("saved:", fig.base, Sys.time()))
