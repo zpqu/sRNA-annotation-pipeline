@@ -8,7 +8,7 @@
 ##   any              : any overlap (>= 1 bp)               -> <out.base>/any/
 ## Contents (covers ALL genome-feature categories, not only miRNA):
 ##   1) full read.annotation composition (unique + all reads) across strategies
-##   2) per-category read-size distributions (matmiRNA, snoRNA, piRNA, tRNA)
+##   2) per-category read-size distributions (matmiRNA, piRNA, snoRNA, tRNA)
 ##   3) per-category read totals and how reads move between categories
 ##   4) mature-miRNA-focused: top identities, 5p/3p, sizes, union/any-added reads
 ##   5) strand specificity for the "any" strategy
@@ -58,9 +58,9 @@ for(st in names(strategy.list)){
 d.all[, item := gsub("^AS\\.", "AS_", item)]
 d.all[, item := gsub("refGene\\.NM\\.", "gene.", item)]
 d.all[, strategy := factor(strategy, levels = names(strategy.list))]
-d.all[, item := factor(item, levels = c("matmiRNA", "snoRNA", "piRNA", "tRNA", "RM",
+d.all[, item := factor(item, levels = c("matmiRNA", "piRNA", "snoRNA", "tRNA", "RM",
                                         "gene.exon", "gene.intron", "lincRNA.exon",
-                                        "AS_matmiRNA", "AS_snoRNA", "AS_piRNA", "AS_tRNA",
+                                        "AS_matmiRNA", "AS_piRNA", "AS_snoRNA", "AS_tRNA",
                                         "AS_RM", "AS_gene.exon", "AS_gene.intron",
                                         "AS_lincRNA.exon", "other"))]
 write.csv(d.all[order(strategy, -pct_reads)], file.path(dir.tab, "Table_s01a_overlap_rule_composition.csv"), row.names = FALSE)
@@ -84,7 +84,7 @@ size.all = data.table()
 for(st in names(strategy.list)){
   dir = strategy.dir.of(st)
   t2b = as.data.table(read.csv(file.path(dir, "tables", "Table_02b_annotation_count_all_reads.csv")))
-  for(cat in c("matmiRNA", "snoRNA", "piRNA", "tRNA")){
+  for(cat in c("matmiRNA", "piRNA", "snoRNA", "tRNA")){
     x = t2b[category == paste0(cat, ".size"), .(sample, cat, strategy = st,
                                                 Var1 = as.character(item), Freq)]
     size.all = rbind(size.all, x)
